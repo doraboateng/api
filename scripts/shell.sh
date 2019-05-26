@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-./scripts/setup.sh
 ./scripts/start.sh --quiet
 
 # Load environment variables.
