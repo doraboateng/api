@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/doraboateng/api/src/handlers"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
@@ -43,6 +44,8 @@ func Create() *chi.Mux {
 	router.Get("/panic", func(writer http.ResponseWriter, request *http.Request) {
 		panic("test")
 	})
+	
+    router.Get("/health", handlers.GetHealth)
 
 	return router
 }
