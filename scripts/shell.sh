@@ -3,7 +3,6 @@
 ./scripts/start.sh --quiet
 
 # Load environment variables.
-# shellcheck disable=SC1091
 set -a; source .env; set +a;
 
 # Launch a bash shell into running container.
