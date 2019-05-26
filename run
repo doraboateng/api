@@ -11,12 +11,6 @@ elif [[ $SCRIPT_NAME == "help" ]] || [[ $SCRIPT_NAME == "--help" ]] || [[ $SCRIP
     find ./scripts -maxdepth 1 -type f -printf "%f\n"
     printf "\n%s\n" "$HELP"
     exit 0
-elif [[ $SCRIPT_NAME == "test" ]] || [[ $SCRIPT_NAME == "tests" ]]; then
-    echo "Running tests..."
-    # docker exec --interactive $API_CONTAINER bash -c \
-    #     "coverage run manage.py test && coverage report"
-    echo "TODO"
-    exit 0
 elif [[ $SCRIPT_NAME =~ .*\.sh ]]; then
     EXEC="./scripts/$SCRIPT_NAME"
 else

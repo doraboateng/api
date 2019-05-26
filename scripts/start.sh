@@ -23,6 +23,8 @@ if [[ $RUNNING == "" ]]; then
     exit 1
 fi
 
-echo ""
-echo "You can view the logs from the API by running \"./run logs\"."
-echo "To stop the API, use \"./run stop\"."
+if [[ $1 != "--quiet" ]]; then
+    echo ""
+    echo "You can view the logs from the API by running \"./run logs\"."
+    echo "To stop the API, use \"./run stop\"."
+fi
