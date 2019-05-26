@@ -1,22 +1,22 @@
 language: go
 
-env:
-  global:
-    # Code Climate reporter ID.
-    - CC_TEST_REPORTER_ID=644e6d51a44d6105c58dd5cdd667e108bd9c5553aa42a3114b929cfd25ed264f
+install:
+  # Dependencies for Coveralls.io.
+  - go get golang.org/x/tools/cmd/cover
+  - go get github.com/mattn/goveralls
 
-git:
-  depth: 1
-  quiet: true
-
-# Notify Code Climate of impending test run.
 before_script:
+  # Notify Code Climate of impending test run.
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
 
-# Add coverage information to build log.
-script: go test -coverprofile c.out ./...
+script:
+  # Add coverage information to build log.
+  - go test -coverprofile c.out ./...
+
+  # Send coverage report to Coveralls.io.
+  - $HOME/gopath/bin/goveralls -coverprofile=c.out -service=travis-ci -repotoken $COVERALLS_TOKEN
 
 # Notify Code Climate of completed test run.
 after_script:
@@ -24,3 +24,12 @@ after_script:
 
 notifications:
   email: false
+
+git:
+  depth: 1
+  quiet: true
+
+env:
+  global:
+    - secure: "YV+FpyNrkiY3cO9b+x6ekDIFgHLv6Srxrg5tvf6Q04S3K23cui36KorBcWcIXwOSUKadNfPaiwRWYMk/5djtyQlol8TPsVwoIxmof/OXd8X8EEwMzr6s/pLBP8jCyJqIm7QGGRpe+Mpgmylz7cZYpEc+2PIo+VgL1S9HKuj7mlClzZwbf9J+2t+z+anB4Hf88b4a3bQXs7Mr12OGAZxO2HRsjVON17l0okrfIgmjUwAJeTca3v6IDEWFUYp0gptmGimW0dC7OW/vs6DWkMC0OYS0p0NzBfh5faFkKSP92n/XS+k6boqm9Nx6whfG5Zq89pSTXuZ17RjXR0n7/QkDXdaD+du86OWNc9LVJIGeGr1ttEt59sJhCgSGohB+jW2ArKstggAwvSjWC0m+jVyEnFP0tq6o60kATUSX7zkE5aNEvheY7Eac2Y9nh/0Lh0nb+caypR7bnlrjCPO5DKOwXO4T9fUk53ZWF5n+a6gdOjT8btdO9tWYaSZ4f9BupE4urHyGhsJUrGKKTC7cvzcqF9naPleyYAi/N5B445hD6jY92DHoTfxlzurRxYrA6oSYht+aCeSj2nCX3DNCx3nTKSDC2CgBi36Msi9PPePCS4KwqArZ7wc/u7w/bHkGFIUh1CqbQIauRRFidE7qBlGfjWVmdhNbCRk7HEkEJSW0yS4="
+    - secure: "UIWUepRujHk0tueP66hVi4hUDYxPqD6FruxwnkxI0eCvMdhb4p91c8uVa7zoEwwKG0zzfFfG4v4XEg+Uxef3Yqevf6RWhqqJK6iGrLMIj37xh89d2Nw+JruBujOOn0j6kfujemLBCxEe5bGLKi/lhfZqrnm4E7Wb2PxCIv7XRrETKOY9n3xDjtSNkjt8bODuauhx35vD5WVvRQ5fEQUZfHtYGxkEaAl70/u2iuIaJxRgUV5tBa1evpkRDZ1nwIXhPY3NwWXa/D/SCdfMxgeWIRLsq1f8STrkNJ1xLEx/pj71Ene65umZtOaHZgqQPl1UrplLpsGUZCFPpaMI30kj8PwsHuRmOfkTglZfXLfpwEcA+hM0fU/OVBjdRhDcqs5Ra6oJ4Jdh+fhSj0FV7LbmwVDGj8IjtkA7JFNXcTmG+PVSeXmOgDU5LbGzv00X2ccJFTPMXX2uycfuDQPYaGGP5edpRWMquQhI//hbUC2/0jfwoVm0xrvS5VpehW7p3/dcHzY4Fl9UmrUcIK/oGY7vurNk3fRd1WzLmgMgYEUCFl/2g+Ly8OihngheeQzYVgEM97jeGE4Vm1dtnS6n0BFhCZZ3+gCsEW/2spmLfSpwl5dPokP1jh2xwBIAxdhSQBRV/t+72LzT++FcQf7bTtuu2ubzdfigG6bLGzvYTHVd9Aw="
