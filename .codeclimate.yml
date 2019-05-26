@@ -1,0 +1,24 @@
+version: 2
+
+# Configuration of maintainability checks
+checks: 
+  file-lines:
+    enabled: false
+
+# Enable optional engines to run in addition to your analysis
+plugins:
+  gofmt:
+    enabled: true
+  golint:
+    enabled: true
+  govet:
+    enabled: true
+  markdownlint:
+    enabled: true
+  shellcheck:
+    enabled: true
+
+# Exclude files and/or directories from analysis
+exclude_patterns:
+  - <pattern>
+  - <pattern>
