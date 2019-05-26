@@ -16,7 +16,7 @@ function build-image {
     TARGET=$2
 
     # Check existing build images.
-    IMAGE_ID=$(docker images $NAME:$VERSION --quiet)
+    IMAGE_ID=$(docker images "$NAME:$VERSION" --quiet)
 
     if [[ $IMAGE_ID != "" ]]; then
         echo ""
