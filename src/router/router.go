@@ -44,8 +44,8 @@ func Create() *chi.Mux {
 	router.Get("/panic", func(writer http.ResponseWriter, request *http.Request) {
 		panic("test")
 	})
-	
-    router.Get("/health", handlers.GetHealth)
+
+	router.Get("/health", handlers.GetHealth)
 
 	return router
 }

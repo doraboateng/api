@@ -10,8 +10,7 @@
 git clone git@github.com:doraboateng/api.git
 cd api
 
-# Launch Visual Code Insiders
-# https://code.visualstudio.com/docs/remote/containers
+# Launch Visual Code Insiders: `https://code.visualstudio.com/docs/remote/containers`
 code-insiders .
 
 # Run the API locally.

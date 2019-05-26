@@ -3,6 +3,7 @@
 ./scripts/setup.sh
 
 # Load environment variables.
+# shellcheck disable=SC1091
 set -a
 source ./.env
 set +a
