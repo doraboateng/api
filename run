@@ -4,21 +4,21 @@ HELP="Use the \"help\" command to list available scripts."
 
 # Determine which shell script to run.
 SCRIPT_NAME=$1
-if [ ! $SCRIPT_NAME ]; then
+if [ ! "$SCRIPT_NAME" ]; then
     EXEC="./scripts/start.sh"
-elif [[ $SCRIPT_NAME == "help" ]] || [[ $SCRIPT_NAME == "--help" ]] || [[ $SCRIPT_NAME == "-h" ]]; then
+elif [[ "$SCRIPT_NAME" == "help" ]] || [[ "$SCRIPT_NAME" == "--help" ]] || [[ "$SCRIPT_NAME" == "-h" ]]; then
     printf "Available scripts:\n\n"
     find ./scripts -maxdepth 1 -type f -printf "%f\n"
     printf "\n%s\n" "$HELP"
     exit 0
-elif [[ $SCRIPT_NAME =~ .*\.sh ]]; then
+elif [[ "$SCRIPT_NAME" =~ .*\.sh ]]; then
     EXEC="./scripts/$SCRIPT_NAME"
 else
     EXEC="./scripts/$SCRIPT_NAME.sh"
 fi
 
 # Make sure shell script is valid.
-if [ ! -x $EXEC ]; then
+if [ ! -x "$EXEC" ]; then
     echo "\"$SCRIPT_NAME\" is not a valid command. $HELP"
     exit 1
 fi
