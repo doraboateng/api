@@ -1,31 +1,20 @@
 language: go
 
-install:
-  # Dependencies for Code Climate.
-  - go get github.com/golang/dep/cmd/dep
-  - go get github.com/codeclimate/test-reporter
-  - cd $GOPATH/src/github.com/golang/dep/cmd/dep && git checkout tags/v0.4.1 && go install
-  - cd $GOPATH/src/github.com/codeclimate/test-reporter && git checkout tags/v0.4.3 && go install
-  - cd - && dep ensure -v -vendor-only
-
-  # Dependencies for Coveralls.io.
-  - go get golang.org/x/tools/cmd/cover
-  - go get github.com/mattn/goveralls
-
 before_script:
   # Notify Code Climate of impending test run.
-  - test-reporter before-build
+  - curl --location
+      https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 >
+      /usr/local/bin/code-climate
+  - chmod +x /usr/local/bin/code-climate
+  - code-climate before-build
 
 script:
   # Add coverage information to build log.
   - go test -coverprofile c.out ./...
 
-  # Send coverage report to Coveralls.io.
-  - $GOPATH/bin/goveralls -coverprofile=c.out -service=travis-ci -repotoken $COVERALLS_TOKEN
-
-# Notify Code Climate of completed test run.
 after_script:
-  - test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+  # Notify Code Climate of completed test run.
+  - code-climate after-build --exit-code $TRAVIS_TEST_RESULT
 
 notifications:
   email: false
@@ -36,5 +25,4 @@ git:
 
 env:
   global:
-    - secure: "YV+FpyNrkiY3cO9b+x6ekDIFgHLv6Srxrg5tvf6Q04S3K23cui36KorBcWcIXwOSUKadNfPaiwRWYMk/5djtyQlol8TPsVwoIxmof/OXd8X8EEwMzr6s/pLBP8jCyJqIm7QGGRpe+Mpgmylz7cZYpEc+2PIo+VgL1S9HKuj7mlClzZwbf9J+2t+z+anB4Hf88b4a3bQXs7Mr12OGAZxO2HRsjVON17l0okrfIgmjUwAJeTca3v6IDEWFUYp0gptmGimW0dC7OW/vs6DWkMC0OYS0p0NzBfh5faFkKSP92n/XS+k6boqm9Nx6whfG5Zq89pSTXuZ17RjXR0n7/QkDXdaD+du86OWNc9LVJIGeGr1ttEt59sJhCgSGohB+jW2ArKstggAwvSjWC0m+jVyEnFP0tq6o60kATUSX7zkE5aNEvheY7Eac2Y9nh/0Lh0nb+caypR7bnlrjCPO5DKOwXO4T9fUk53ZWF5n+a6gdOjT8btdO9tWYaSZ4f9BupE4urHyGhsJUrGKKTC7cvzcqF9naPleyYAi/N5B445hD6jY92DHoTfxlzurRxYrA6oSYht+aCeSj2nCX3DNCx3nTKSDC2CgBi36Msi9PPePCS4KwqArZ7wc/u7w/bHkGFIUh1CqbQIauRRFidE7qBlGfjWVmdhNbCRk7HEkEJSW0yS4="
-    - secure: "UIWUepRujHk0tueP66hVi4hUDYxPqD6FruxwnkxI0eCvMdhb4p91c8uVa7zoEwwKG0zzfFfG4v4XEg+Uxef3Yqevf6RWhqqJK6iGrLMIj37xh89d2Nw+JruBujOOn0j6kfujemLBCxEe5bGLKi/lhfZqrnm4E7Wb2PxCIv7XRrETKOY9n3xDjtSNkjt8bODuauhx35vD5WVvRQ5fEQUZfHtYGxkEaAl70/u2iuIaJxRgUV5tBa1evpkRDZ1nwIXhPY3NwWXa/D/SCdfMxgeWIRLsq1f8STrkNJ1xLEx/pj71Ene65umZtOaHZgqQPl1UrplLpsGUZCFPpaMI30kj8PwsHuRmOfkTglZfXLfpwEcA+hM0fU/OVBjdRhDcqs5Ra6oJ4Jdh+fhSj0FV7LbmwVDGj8IjtkA7JFNXcTmG+PVSeXmOgDU5LbGzv00X2ccJFTPMXX2uycfuDQPYaGGP5edpRWMquQhI//hbUC2/0jfwoVm0xrvS5VpehW7p3/dcHzY4Fl9UmrUcIK/oGY7vurNk3fRd1WzLmgMgYEUCFl/2g+Ly8OihngheeQzYVgEM97jeGE4Vm1dtnS6n0BFhCZZ3+gCsEW/2spmLfSpwl5dPokP1jh2xwBIAxdhSQBRV/t+72LzT++FcQf7bTtuu2ubzdfigG6bLGzvYTHVd9Aw="
+    - secure: "YbjZHp4OwBalfPUQiyL6aNDzYUwphr9zBmi5OwA1rLUtDCf58vZ43VtKrTaa426oxFBzxLsmz+N+mL+LP3JVgkhFOJC0E+w9nkNt6ZgfiRs5sl580OCOdMgb1f1Yq4G1jm2hcEUPUZxO+T6Kg74QMttvo1lAwA3DveRv6cP+Kj6rGpFpL66Sesu0hYXxlhviz4YFYIizRdCvEeSxnAGH9ekWKnmg1HBPpQ6vJRuo8Td9pudZQIeDemgi/mYiK3F7VObBIG5JhMAMTSYrahYtlvcytEzvDjbP8l2o9baksaijDchOyZOuPsed62s0xD7miwc97UYfonsvYaZeri+cJGEcRTg6EAjBgdIi+u6QTAYLSTp0b59fe2e9aBVDS9Bl0+6kJ3jl5V78RIljc1QFfZGqS+w7b1NG9TOYZ8F9ZgZ0pZbqyIjnGv0L/VtEvLujoqNdAcItUT4h4zs0tFtTH+ODW7n3zk/i2/M/v7RGy9KWoh4f6JJWB8pljJAlTLalmvCh88ODOvWYNOBYFSOY2727qbZ5AFYs+0t63ULPpEAM+TOAE+0Baha+zArLMVGjXoXIrmSW3VZgkrnga83vCTsvO7wW2QX7wb7ozTThIxySV2cNWvqe4rFVj2tiB3d4WsVbYkkICa5R2GXNf8QF1a+omvj+23+mNh8hEDWYKb0="
