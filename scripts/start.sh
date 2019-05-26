@@ -26,7 +26,7 @@ fi
 
 if [[ $1 != "--quiet" ]]; then
     echo ""
-    echo "Running container ID: $RUNNING"
     echo "You can view the logs from the API by running \"./run logs\"."
     echo "To stop the API, use \"./run stop\"."
+    echo "Running container ID: $RUNNING"
 fi

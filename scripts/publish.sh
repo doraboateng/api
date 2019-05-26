@@ -18,15 +18,23 @@ function build-image {
     # Check existing build images.
     IMAGE_ID=$(docker images "$NAME:$VERSION" --quiet)
 
-    if [[ $IMAGE_ID != "" ]]; then
+    if [[ "$IMAGE_ID" != "" ]]; then
         echo ""
-        read -p "This will overwrite \\"$NAME:$VERSION\\". Continue? [N/y] " confirmation
+        echo -n "This will overwrite \"$NAME:$VERSION\"."
+        read -p " Continue? [N/y] " confirmation
 
         if [[ ! $confirmation =~ ^[Yy] ]]; then
             exit 0
         fi
 
-        docker image rm "$NAME $IMAGE_ID"
+        # Remove related container, if any.
+        CONTAINER_ID=$(docker container ls -a --filter ancestor="$NAME" --format "{{.ID}}")
+
+        if [[ "$CONTAINER_ID" != "" ]]; then
+            docker container rm "$CONTAINER_ID"
+        fi
+
+        docker image rm "$NAME" "$IMAGE_ID"
     fi
 
     # Build the image.
@@ -40,6 +48,7 @@ function build-image {
 
 # Create dependencies file.
 ./scripts/create-deps-file.sh
+./scripts/stop.sh --quiet
 
 # Builds images.
 IMAGE_NAME=doraboateng/api
