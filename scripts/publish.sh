@@ -20,8 +20,7 @@ function build-image {
 
     if [[ "$IMAGE_ID" != "" ]]; then
         echo ""
-        echo -n "This will overwrite \"$NAME:$VERSION\"."
-        read -p " Continue? [N/y] " confirmation
+        read -rp "This will overwrite \"$NAME:$VERSION\". Continue? [N/y] " confirmation
 
         if [[ ! $confirmation =~ ^[Yy] ]]; then
             exit 0
