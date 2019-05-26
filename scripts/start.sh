@@ -4,9 +4,7 @@
 
 # Load environment variables.
 # shellcheck disable=SC1091
-set -a
-source ./.env
-set +a
+set -a; source .env; set +a;
 
 # Launch the API.
 docker-compose up --detach

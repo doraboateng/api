@@ -4,9 +4,7 @@
 
 # Load environment variables.
 # shellcheck disable=SC1091
-set -a
-source ./.env
-set +a
+set -a; source .env; set +a;
 
 # Stop the container.
 if [[ $1 != "--quiet" ]]; then
