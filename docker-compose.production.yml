@@ -1,0 +1,10 @@
+version: "3"
+services:
+  api:
+    build: .
+    command: bash -c "go get && go build -o ../builds/app && ../builds/app"
+    env_file: ./.env
+    ports:
+      - "80:$APP_PORT"
+    volumes:
+      - ./src:/go/src/github.com/doraboateng/api/src
