@@ -4,8 +4,8 @@ before_script:
   # Notify Code Climate of impending test run.
   - curl --location
       https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 >
-      /usr/local/bin/code-climate
-  - chmod +x /usr/local/bin/code-climate
+      $HOME/bin/code-climate
+  - chmod +x $HOME/bin/code-climate
   - code-climate before-build
 
 script:
