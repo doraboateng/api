@@ -19,5 +19,5 @@ else
         -c "go list -f '{{ join .Imports \"\\n\" }}' > $EXPORT_FILE"
     mv --force ./src/$EXPORT_FILE ./$EXPORT_FILE
 
-    echo "Dependencies saved to ./$EXPORT_FILE"
+    echo "Package list saved to ./$EXPORT_FILE"
 fi

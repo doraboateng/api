@@ -1,0 +1,12 @@
+# Ignore all files not relevant to Docker image.
+.devcontainer/
+.git/
+.vscode/
+scripts/
+tmp/
+.env
+.env.example
+.travis.yml
+docker-compose*
+README.md
+run
