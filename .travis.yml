@@ -1,8 +1,26 @@
 language: go
 
-# Limit Git depth to the latest commit.
+env:
+  global:
+    # Code Climate reporter ID.
+    - CC_TEST_REPORTER_ID=644e6d51a44d6105c58dd5cdd667e108bd9c5553aa42a3114b929cfd25ed264f
+
 git:
   depth: 1
+  quiet: true
+
+# Notify Code Climate of impending test run.
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
 
 # Add coverage information to build log.
-script: go test -cover ./...
+script: go test -coverprofile c.out ./...
+
+# Notify Code Climate of completed test run.
+after_script:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+
+notifications:
+  email: false
