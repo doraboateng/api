@@ -10,6 +10,12 @@ import (
 	"github.com/go-chi/chi"
 )
 
+// API version.
+var version string
+
+// Git hash corresponding to the currently running build.
+var	gitHash string
+
 func main() {
 	router := router.Create()
 
@@ -34,6 +40,8 @@ func main() {
 	}
 
 	fmt.Println("Environment: " + os.Getenv("APP_ENV"))
+	fmt.Println("Version: " + version)
+	fmt.Println("Hash: " + gitHash)
 	fmt.Println("Serving API on http://localhost:" + port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }
