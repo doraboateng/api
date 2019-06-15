@@ -11,6 +11,8 @@
 .vscode/
 
 # Temporary files
+builds/*
+!builds/.gitkeep
 tmp/
 
 # Output of the go coverage tool, specifically when used with LiteIDE

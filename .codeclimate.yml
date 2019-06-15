@@ -1,7 +1,7 @@
 version: 2
 
 # Configuration of maintainability checks
-checks: 
+checks:
   file-lines:
     enabled: false
 
@@ -17,8 +17,6 @@ plugins:
     enabled: true
   shellcheck:
     enabled: true
-
-# Exclude files and/or directories from analysis
-exclude_patterns:
-  - <pattern>
-  - <pattern>
+    checks:
+      SC1091:
+        enabled: false

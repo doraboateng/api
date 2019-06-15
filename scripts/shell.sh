@@ -2,8 +2,9 @@
 
 ./scripts/start.sh --quiet
 
-# Load environment variables.
-set -a; source .env; set +a;
+set -a
+source .env
+set +a
 
 # Launch a bash shell into running container.
 CONTAINER_ID=$(docker container ls | grep "${COMPOSE_PROJECT_NAME}_api" | cut -c 1-12)

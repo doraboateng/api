@@ -3,13 +3,14 @@
 ./scripts/setup.sh
 ./scripts/start.sh --quiet
 
-# Load environment variables.
-set -a; source .env; set +a;
+set -a
+source .env
+set +a
 
-# Run all tests.
-CONTAINER_ID=$(docker container ls | grep "${COMPOSE_PROJECT_NAME}_api" | cut -c 1-12)
-if [[ $CONTAINER_ID == "" ]]; then
+DOCKER_CONTAINER_ID=$(docker container ls | grep "${COMPOSE_PROJECT_NAME}_api" | cut -c 1-12)
+
+if [[ $DOCKER_CONTAINER_ID == "" ]]; then
     echo "No container running. Use the \"./run\" script to launch it."
 else
-    docker exec --interactive --tty "$CONTAINER_ID" bash -c "go test -cover ./..."
+    docker exec --interactive --tty "$DOCKER_CONTAINER_ID" bash -c "go test -cover ./..."
 fi
