@@ -2,8 +2,9 @@
 
 ./scripts/setup.sh
 
-# Load environment variables.
-set -a; source .env; set +a;
+set -a
+source .env
+set +a
 
 # Stop the container.
 if [[ $1 != "--quiet" ]]; then

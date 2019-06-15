@@ -14,7 +14,7 @@ import (
 var version string
 
 // Git hash corresponding to the currently running build.
-var	gitHash string
+var gitHash string
 
 func main() {
 	router := router.Create()
