@@ -8,3 +8,11 @@ services:
       - "$APP_PORT:$APP_PORT"
     volumes:
       - ./src:/go/src/github.com/doraboateng/api/src
+  db:
+    environment:
+      MYSQL_DATABASE: boateng_dev
+      MYSQL_USER: boateng_dev
+      MYSQL_ROOT_PASSWORD: boateng_dev
+    image: mariadb:10.4
+    ports:
+      - "15432:5432"
