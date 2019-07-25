@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-./scripts/setup.sh
+./scripts/check-setup.sh
+./scripts/check-docker-image.sh
 
 set -a
 source .env
