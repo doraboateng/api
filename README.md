@@ -10,7 +10,7 @@
 git clone git@github.com:doraboateng/api.git
 cd api
 
-# Run the API locally.
+# Run the API locally. This will also build the base image for the API.
 ./run
 
 # Launch your IDE.
