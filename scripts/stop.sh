@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-./scripts/setup.sh
+./scripts/check-setup.sh
 
 set -a
 source .env

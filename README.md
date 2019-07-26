@@ -10,11 +10,11 @@
 git clone git@github.com:doraboateng/api.git
 cd api
 
-# Launch Visual Code Insiders: `https://code.visualstudio.com/docs/remote/containers`
-code-insiders .
-
-# Run the API locally.
+# Run the API locally. This will also build the base image for the API.
 ./run
+
+# Launch your IDE.
+code .
 ```
 
 </details>
@@ -23,6 +23,7 @@ code-insiders .
   <summary>Table of contents</summary>
 
 - [Local development](#local-development)
+  - [Shellcheck](#shellcheck)
 - [Tests](#tests)
 - [Travis](#travis)
   - [Adding and updating encrypted values](#adding-and-updating-encrypted-values)
@@ -31,10 +32,16 @@ code-insiders .
 
 # Local development
 
-Follow the [Developing inside a Container](https://code.visualstudio.com/docs/remote/containers) guide to install [Visual Studio Code Insiders](https://code.visualstudio.com/insiders) along with the [Remote Development extensions](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack). Once that's ready, you can launch Visual Studio Code Insiders using the `code-insiders` command:
+We use [Visual Studio Code](https://code.visualstudio.com) with the [Remote Development extensions](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack).
 
-```shell
-code-insiders .
+## Shellcheck
+
+You can disable some [Shellcheck](https://github.com/koalaman/shellcheck) rules in Visual Studio Code from the user or workspace settings. For example, to ignore rule [SC1091](https://github.com/koalaman/shellcheck/wiki/SC1091):
+
+```json
+{
+  "shellcheck.exclude": ["SC1091"]
+}
 ```
 
 # Tests
