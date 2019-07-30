@@ -1,17 +1,17 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 ./scripts/check-setup.sh
-
-set -a
-source .env
-set +a
+. scripts/utils.sh
 
 # Stop the container.
-if [[ $1 != "--quiet" ]]; then
-    echo "Stopping container..."
+if [ ! "$1" = "--quiet" ]; then
+    echo "Stopping containers..."
 fi
 
-CONTAINER_ID=$(docker container ls | grep "${COMPOSE_PROJECT_NAME}_api" | cut -c 1-12)
-if [[ $CONTAINER_ID != "" ]]; then
+if CONTAINER_ID=$(get_container_id api); then
+    docker stop "$CONTAINER_ID" > /dev/null
+fi
+
+if CONTAINER_ID=$(get_container_id db); then
     docker stop "$CONTAINER_ID" > /dev/null
 fi

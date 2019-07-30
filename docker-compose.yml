@@ -3,6 +3,8 @@ services:
   api:
     image: doraboateng/api-build:latest
     command: bash -c "go get && go run main.go"
+    depends_on:
+      - db
     env_file: ./.env
     ports:
       - "$APP_PORT:$APP_PORT"
@@ -10,9 +12,10 @@ services:
       - ./src:/go/src/github.com/doraboateng/api/src
   db:
     environment:
-      MYSQL_DATABASE: boateng_dev
-      MYSQL_USER: boateng_dev
-      MYSQL_ROOT_PASSWORD: boateng_dev
-    image: mariadb:10.4
+      MYSQL_DATABASE: $MARIADB_DATABASE
+      MYSQL_USER: $MARIADB_USERNAME
+      MYSQL_PASSWORD: $MARIADB_PASSWORD
+      MYSQL_ROOT_PASSWORD: $MARIADB_PASSWORD
+    image: mariadb:10.4.6
     ports:
-      - "15432:5432"
+      - "$MARIADB_EXTERNAL_PORT:$MARIADB_PORT"

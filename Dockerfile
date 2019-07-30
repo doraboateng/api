@@ -5,8 +5,11 @@ ARG APP_ENV
 ENV APP_ENV ${APP_ENV}
 
 COPY ./src /go/src/github.com/doraboateng/api/src
+COPY ./migrations /go/src/github.com/doraboateng/api/migrations
 WORKDIR /go/src/github.com/doraboateng/api/src
 
-# Install project dependencies.
+# Install project dependencies and migration tool.
 ADD ./dependencies.txt /go/src/github.com/doraboateng/api/
-RUN go get -v < ../dependencies.txt
+RUN go get -v < ../dependencies.txt && \
+    go get -u database/sql github.com/go-sql-driver/mysql && \
+    go get -tags 'mysql' -u github.com/golang-migrate/migrate/cmd/migrate

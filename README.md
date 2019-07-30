@@ -10,8 +10,9 @@
 git clone git@github.com:doraboateng/api.git
 cd api
 
-# Run the API locally. This will also build the base image for the API.
-./run
+# Run the database migrations. This will launch the API locally, build
+# the base image and run the migration files.
+./run migrate
 
 # Launch your IDE.
 code .
@@ -22,6 +23,7 @@ code .
 <details>
   <summary>Table of contents</summary>
 
+- [Requirements](#requirements)
 - [Local development](#local-development)
   - [Shellcheck](#shellcheck)
 - [Tests](#tests)
@@ -32,7 +34,14 @@ code .
 
 # Local development
 
-We use [Visual Studio Code](https://code.visualstudio.com) with the [Remote Development extensions](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack).
+## Requirements
+
+- [Docker](https://docs.docker.com) & [Docker Compose](https://docs.docker.com/compose)
+
+**Recommended**
+
+- [Visual Studio Code](https://code.visualstudio.com) with the [Remote Development extensions](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack).
+- [DBeaver](https://dbeaver.io) (or [alternative](https://alternativeto.net/software/dbeaver)) for inspecting databases.
 
 ## Shellcheck
 
