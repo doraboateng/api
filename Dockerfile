@@ -4,8 +4,8 @@ LABEL version="0.1.0"
 ARG APP_ENV
 ENV APP_ENV ${APP_ENV}
 
-COPY ./src /go/src/github.com/doraboateng/api/src
-COPY ./migrations /go/src/github.com/doraboateng/api/migrations
+ADD ./src /go/src/github.com/doraboateng/api/src
+ADD ./migrations /go/src/github.com/doraboateng/api/migrations
 WORKDIR /go/src/github.com/doraboateng/api/src
 
 # Install project dependencies and migration tool.

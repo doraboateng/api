@@ -13,12 +13,16 @@ CREATE TABLE `alphabets` (
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
+CREATE TABLE `alphabet_language` (
+  `alphabet_id` int(10) unsigned NOT NULL,
+  `language_id` int(10) unsigned NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
 CREATE TABLE `definitions` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `type` tinyint(3) unsigned NOT NULL,
   `sub_type` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `main_language_code` varchar(7) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `related_definitions` json DEFAULT NULL,
   `rating` tinyint(3) unsigned NOT NULL,
   `meta` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -26,6 +30,12 @@ CREATE TABLE `definitions` (
   `deleted_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1248 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+CREATE TABLE `definition_language` (
+  `definition_id` int(10) unsigned NOT NULL,
+  `language_id` int(10) unsigned NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 CREATE TABLE `definition_titles` (
@@ -37,8 +47,7 @@ CREATE TABLE `definition_titles` (
   `updated_at` timestamp NULL DEFAULT NULL,
   `deleted_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `definition_titles_definition_id_foreign` (`definition_id`),
-  CONSTRAINT `definition_titles_definition_id_foreign` FOREIGN KEY (`definition_id`) REFERENCES `definitions` (`id`) ON DELETE CASCADE
+  KEY `definition_titles_definition_id_index` (`definition_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1346 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
@@ -57,6 +66,16 @@ CREATE TABLE `languages` (
 ) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
+CREATE TABLE `references` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `type` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `data` json NOT NULL,
+  `string` varchar(400) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
 CREATE TABLE `translations` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `definition_id` int(10) unsigned NOT NULL,
@@ -68,8 +87,7 @@ CREATE TABLE `translations` (
   `updated_at` timestamp NULL DEFAULT NULL,
   `deleted_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `translations_definition_id_foreign` (`definition_id`),
-  CONSTRAINT `translations_definition_id_foreign` FOREIGN KEY (`definition_id`) REFERENCES `definitions` (`id`) ON DELETE CASCADE
+  KEY `translations_definition_id_index` (`definition_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1248 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
@@ -82,6 +100,5 @@ CREATE TABLE `transliterations` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   `deleted_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  FULLTEXT KEY `idx_transliteration` (`transliteration`)
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1348 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

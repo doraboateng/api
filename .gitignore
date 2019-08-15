@@ -13,7 +13,9 @@
 # Temporary files
 builds/*
 !builds/.gitkeep
+data/*
+!data/.gitkeep
 tmp/
 
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
+# Miscellaneous
+.DS_Store

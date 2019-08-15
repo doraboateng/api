@@ -17,7 +17,7 @@ if [ "$COMMAND" = "" ]; then
     COMMAND="up"
 fi
 
-docker exec "$CONTAINER_ID" \
+docker exec --interactive "$CONTAINER_ID" \
     migrate \
     -database "mysql://${MARIADB_USERNAME}:${MARIADB_PASSWORD}@tcp(${MARIADB_HOST}:${MARIADB_PORT})/${MARIADB_DATABASE}" \
     -path ../migrations \
