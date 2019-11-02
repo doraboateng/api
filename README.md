@@ -23,9 +23,9 @@ code .
 <details>
   <summary>Table of contents</summary>
 
-- [Requirements](#requirements)
 - [Local development](#local-development)
-  - [Shellcheck](#shellcheck)
+  - [Required software](#required-software)
+  - [Recommended software](#recommended-software)
 - [Tests](#tests)
 - [Travis](#travis)
   - [Adding and updating encrypted values](#adding-and-updating-encrypted-values)
@@ -34,24 +34,14 @@ code .
 
 # Local development
 
-## Requirements
+## Required software
 
 - [Docker](https://docs.docker.com) & [Docker Compose](https://docs.docker.com/compose)
 
-**Recommended**
+## Recommended software
 
 - [Visual Studio Code](https://code.visualstudio.com) with the [Remote Development extensions](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack).
 - [DBeaver](https://dbeaver.io) (or [alternative](https://alternativeto.net/software/dbeaver)) for inspecting databases.
-
-## Shellcheck
-
-You can disable some [Shellcheck](https://github.com/koalaman/shellcheck) rules in Visual Studio Code from the user or workspace settings. For example, to ignore rule [SC1091](https://github.com/koalaman/shellcheck/wiki/SC1091):
-
-```json
-{
-  "shellcheck.exclude": ["SC1091"]
-}
-```
 
 # Tests
 
