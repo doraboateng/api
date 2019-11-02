@@ -9,6 +9,7 @@ services:
     ports:
       - "$APP_PORT:$APP_PORT"
     volumes:
+      - ./migrations:/go/src/github.com/doraboateng/api/migrations
       - ./src:/go/src/github.com/doraboateng/api/src
   db:
     environment:
@@ -18,4 +19,4 @@ services:
       MYSQL_ROOT_PASSWORD: $MARIADB_PASSWORD
     image: mariadb:10.4.6
     ports:
-      - "$MARIADB_EXTERNAL_PORT:$MARIADB_PORT"
+      - "$MARIADB_HOST_PORT:$MARIADB_PORT"

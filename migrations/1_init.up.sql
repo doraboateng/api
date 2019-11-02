@@ -23,6 +23,8 @@ CREATE TABLE `definitions` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `type` tinyint(3) unsigned NOT NULL,
   `sub_type` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `main_language_code` varchar(7) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `related_definitions` json DEFAULT NULL,
   `rating` tinyint(3) unsigned NOT NULL,
   `meta` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -41,7 +43,7 @@ CREATE TABLE `definition_language` (
 CREATE TABLE `definition_titles` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `definition_id` int(10) unsigned NOT NULL,
-  `alphabet_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `alphabet_code` varchar(20) COLLATE utf8mb4_unicode_ci NULL,
   `title` varchar(400) COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
