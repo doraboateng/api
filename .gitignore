@@ -6,9 +6,8 @@
 *.so
 *.test
 
-# Environment and IDE files
+# Environment
 .env
-.vscode/
 
 # Temporary files
 builds/*
