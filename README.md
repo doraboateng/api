@@ -20,52 +20,7 @@ code .
 
 </details>
 
-<details>
-  <summary>Table of contents</summary>
+# Docs
 
-- [Requirements](#requirements)
-- [Local development](#local-development)
-  - [Shellcheck](#shellcheck)
-- [Tests](#tests)
-- [Travis](#travis)
-  - [Adding and updating encrypted values](#adding-and-updating-encrypted-values)
-
-</details>
-
-# Local development
-
-## Requirements
-
-- [Docker](https://docs.docker.com) & [Docker Compose](https://docs.docker.com/compose)
-
-**Recommended**
-
-- [Visual Studio Code](https://code.visualstudio.com) with the [Remote Development extensions](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack).
-- [DBeaver](https://dbeaver.io) (or [alternative](https://alternativeto.net/software/dbeaver)) for inspecting databases.
-
-## Shellcheck
-
-You can disable some [Shellcheck](https://github.com/koalaman/shellcheck) rules in Visual Studio Code from the user or workspace settings. For example, to ignore rule [SC1091](https://github.com/koalaman/shellcheck/wiki/SC1091):
-
-```json
-{
-  "shellcheck.exclude": ["SC1091"]
-}
-```
-
-# Tests
-
-```shell
-./run test
-```
-
-# Travis
-
-## Adding and updating encrypted values
-
-Using the [Travis CLI](https://github.com/travis-ci/travis.rb), it's possible to [encrypt sensitive information](https://docs.travis-ci.com/user/encryption-keys) in the Travis file:
-
-```shell
-# Encrypt an environment variable using the travis CLI:
-travis encrypt --com SOMEVAR="secretvalue"
-```
+- [Contributing ↗](https://github.com/doraboateng/api/blob/stable/docs/contributing.md)
+- [Deploying ↗](https://github.com/doraboateng/api/blob/stable/docs/deploying.md)
