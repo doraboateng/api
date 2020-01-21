@@ -47,6 +47,15 @@ func NotFoundError(err error) render.Renderer {
 	}
 }
 
+// NotImplementedError ...
+func NotImplementedError() render.Renderer {
+	return &ErrorResponse{
+		Err:            nil,
+		HTTPStatusCode: 501,
+		StatusText:     "Not implemented.",
+	}
+}
+
 // RenderingError ...
 func RenderingError(err error) render.Renderer {
 	return &ErrorResponse{

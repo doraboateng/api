@@ -31,7 +31,7 @@ func GetHealth(writer http.ResponseWriter, request *http.Request) {
 		API: "up",
 	}
 
-	if err := render.Render(writer, request, Response(status)); err != nil {
+	if err := render.Render(writer, request, healthResponse(status)); err != nil {
 		render.Render(writer, request, utils.RenderingError(err))
 		return
 	}
@@ -42,13 +42,12 @@ func GetHealth(writer http.ResponseWriter, request *http.Request) {
 // ---
 
 // Render - renders an InvitationResponse.
-func (rd *StatusResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (res *StatusResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	// Pre-processing before a response is marshalled and sent across the wire
 
 	return nil
 }
 
-// Response - generates a Status response.
-func Response(status *Status) render.Renderer {
+func healthResponse(status *Status) render.Renderer {
 	return &StatusResponse{Status: status}
 }

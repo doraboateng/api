@@ -6,7 +6,7 @@ HELP="Use the \"help\" command to list available scripts."
 SCRIPT_NAME=$1
 if [ ! "$SCRIPT_NAME" ]; then
     EXEC="./scripts/start.sh"
-elif [[ "$SCRIPT_NAME" == "help" ]] || [[ "$SCRIPT_NAME" == "--help" ]] || [[ "$SCRIPT_NAME" == "-h" ]]; then
+elif [[ "$SCRIPT_NAME" == "help" ]]; then
     printf "Available scripts:\n\n"
     find ./scripts -maxdepth 1 -type f -printf "%f\n"
     printf "\n%s\n" "$HELP"

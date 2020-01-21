@@ -31,10 +31,15 @@ func Create() *chi.Mux {
 	// processing should be stopped.
 	router.Use(middleware.Timeout(60 * time.Second))
 
-	// Default route.
+	// Informational routes
+	router.Get("/health", handlers.GetHealth)
+	router.Get("/locales", handlers.LocalesHandler)
 	router.Get("/", func(writer http.ResponseWriter, request *http.Request) {
 		writer.Write([]byte("Dora Boateng API"))
 	})
+
+	// Definitions.
+	router.Route("/definitions", handlers.DefinitionsHandler)
 
 	// Test routes
 	router.Get("/ping", func(writer http.ResponseWriter, request *http.Request) {
@@ -44,8 +49,6 @@ func Create() *chi.Mux {
 	router.Get("/panic", func(writer http.ResponseWriter, request *http.Request) {
 		panic("test")
 	})
-
-	router.Get("/health", handlers.GetHealth)
 
 	return router
 }
