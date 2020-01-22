@@ -40,6 +40,7 @@ func Create() *chi.Mux {
 
 	// Definitions.
 	router.Route("/definitions", handlers.DefinitionsHandler)
+	router.Route("/languages", handlers.LanguagesHandler)
 
 	// Test routes
 	router.Get("/ping", func(writer http.ResponseWriter, request *http.Request) {
