@@ -8,7 +8,7 @@ if [ ! "$SCRIPT_NAME" ]; then
     EXEC="./scripts/start.sh"
 elif [[ "$SCRIPT_NAME" == "help" ]]; then
     printf "Available scripts:\n\n"
-    find ./scripts -maxdepth 1 -type f -printf "%f\n"
+    ls ./scripts
     printf "\n%s\n" "$HELP"
     exit 0
 elif [[ "$SCRIPT_NAME" =~ .*\.sh ]]; then

@@ -15,11 +15,9 @@ get_container_id() {
     CONTAINER_ID=$(docker container ls --quiet --filter name="${COMPOSE_PROJECT_NAME}_${SERVICE_NAME}")
     if [ "$CONTAINER_ID" = "" ]; then
         echo "$MSG_NO_RUNNING_CONTAINER"
-
         return 1
     else
         echo "$CONTAINER_ID"
-
         return 0
     fi
 }
