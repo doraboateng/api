@@ -1,15 +1,42 @@
-FROM golang AS build-env
-LABEL version="0.1.0"
+ARG GO_VERSION=1.13.7
 
-ARG APP_ENV
-ENV APP_ENV ${APP_ENV}
+# Dev stage.
+FROM golang:${GO_VERSION}-alpine AS dev
+LABEL version="0.2.0"
 
-ADD ./migrations /go/src/github.com/doraboateng/api/migrations
-ADD ./src /go/src/github.com/doraboateng/api/src
-WORKDIR /go/src/github.com/doraboateng/api/src
+RUN apk add curl git htop vim
 
-# Install project dependencies and migration tool.
-ADD ./dependencies.txt /go/src/github.com/doraboateng/api/
-RUN go get -v < ../dependencies.txt && \
-    go get -u database/sql github.com/go-sql-driver/mysql && \
-    go get -tags 'mysql' -u github.com/golang-migrate/migrate/cmd/migrate
+RUN cd /tmp && \
+    curl --location \
+        https://github.com/golang-migrate/migrate/releases/download/v4.8.0/migrate.linux-amd64.tar.gz \
+        | tar xvz && \
+    mv ./migrate.linux-amd64 /usr/bin/migrate
+
+ADD . /root/boateng-api
+WORKDIR /root/boateng-api/src
+
+RUN go get -u -v \
+        database/sql github.com/go-sql-driver/mysql \
+        github.com/cosmtrek/air
+
+# Build stage.
+FROM dev as build
+
+ARG BUILD_VERSION
+ARG GIT_HASH
+ARG BUILD_NAME
+RUN go build \
+        -ldflags "-X main.version=${BUILD_VERSION} -X main.gitHash=${GIT_HASH}" \
+        -o ${BUILD_NAME}
+
+# Production stage.
+FROM scratch AS prod
+
+ENV APP_BUILD_PATH="/var/app" \
+    APP_BUILD_NAME="main"
+WORKDIR ${APP_BUILD_PATH}
+COPY --from=build ${APP_BUILD_PATH}/${APP_BUILD_NAME} ${APP_BUILD_PATH}/
+
+EXPOSE ${APP_PORT}
+ENTRYPOINT ["/var/app/main"]
+CMD ""

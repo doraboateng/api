@@ -4,9 +4,9 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/doraboateng/api/src/utils"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/kwcay/boateng-api/src/utils"
 )
 
 // --
@@ -26,7 +26,7 @@ func DefinitionsHandler(r chi.Router) {
 		r.Put("/", featureNotImplemented)
 		r.Delete("/", featureNotImplemented)
 	})
-	
+
 	r.With(tempPaginateDef).Get("/", featureNotImplemented)
 	r.Get("/daily/{type:[a-z-]+}", featureNotImplemented)
 	r.Get("/random/{lang:[a-z-]+}", featureNotImplemented)

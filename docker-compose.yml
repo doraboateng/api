@@ -1,16 +1,18 @@
-version: "3"
+version: "3.5"
 services:
   api:
-    image: doraboateng/api-build:latest
-    command: bash -c "go get && go run main.go"
+    image: doraboateng/api-dev
+    build:
+      context: .
+      target: dev
+    command: air
     depends_on:
       - db
     env_file: ./.env
     ports:
       - "$APP_PORT:$APP_PORT"
     volumes:
-      - ./migrations:/go/src/github.com/doraboateng/api/migrations
-      - ./src:/go/src/github.com/doraboateng/api/src
+      - .:/root/boateng-api
   db:
     environment:
       MYSQL_DATABASE: $MARIADB_DATABASE

@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/doraboateng/api/src/router"
 	"github.com/go-chi/chi"
+	"github.com/kwcay/boateng-api/src/router"
 )
 
 // API version.

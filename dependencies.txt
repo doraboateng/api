@@ -1,6 +1,0 @@
-fmt
-github.com/doraboateng/api/src/router
-github.com/go-chi/chi
-log
-net/http
-os

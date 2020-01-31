@@ -6,7 +6,7 @@ set -a
 source .env
 set +a
 
-DOCKER_CONTAINER_ID=$(docker container ls | grep "${COMPOSE_PROJECT_NAME}_api" | cut -c 1-12)
+DOCKER_CONTAINER_ID=$(docker container ls | grep "boateng_api" | cut -c 1-12)
 if [[ $DOCKER_CONTAINER_ID == "" ]]; then
     echo "No container running."
 else

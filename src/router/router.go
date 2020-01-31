@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/doraboateng/api/src/handlers"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/render"
+	"github.com/kwcay/boateng-api/src/handlers"
 )
 
 // Create - Sets up the router and middleware, and defines all API routes.
