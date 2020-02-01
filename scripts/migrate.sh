@@ -1,7 +1,7 @@
 #!/bin/sh
 
-. scripts/utils.sh
 ./scripts/start.sh --quiet
+. scripts/utils.sh
 
 if ! CONTAINER_ID=$(get_container_id); then
     echo "$CONTAINER_ID"

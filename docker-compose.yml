@@ -1,10 +1,7 @@
 version: "3.5"
 services:
   api:
-    image: doraboateng/api-dev
-    build:
-      context: .
-      target: dev
+    image: doraboateng/api-dev:latest
     command: air
     depends_on:
       - db

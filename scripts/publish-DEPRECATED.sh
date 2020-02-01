@@ -46,7 +46,7 @@ function build-image {
 }
 
 # Create dependencies file.
-./scripts/create-deps-file.sh
+# ./scripts/create-deps-file.sh
 ./scripts/stop.sh --quiet
 
 # Builds images.

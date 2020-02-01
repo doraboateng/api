@@ -7,19 +7,18 @@ if ! IMAGE_VERSION=$(get_version); then
     exit 1
 fi
 
-# Check if image has already been built.
-REPOSITORY_NAME="doraboateng/api-dev"
-if image_exists "$REPOSITORY_NAME:$IMAGE_VERSION"; then
+IMAGE_NAME="doraboateng/api-dev"
+if image_exists "$IMAGE_NAME:$IMAGE_VERSION"; then
     exit 0
 fi
 
-if ! docker build --tag "$REPOSITORY_NAME:$IMAGE_VERSION" --target dev .
+if ! docker build --tag "$IMAGE_NAME:$IMAGE_VERSION" --target dev .
 then
     exit 1
 fi
 
-if image_exists "$REPOSITORY_NAME:latest"; then
-    docker image rm --force "$REPOSITORY_NAME:latest"
+if image_exists "$IMAGE_NAME:latest"; then
+    docker image rm --force "$IMAGE_NAME:latest"
 fi
 
-docker tag "$REPOSITORY_NAME:$IMAGE_VERSION" "$REPOSITORY_NAME:latest"
+docker tag "$IMAGE_NAME:$IMAGE_VERSION" "$IMAGE_NAME:latest"

@@ -1,7 +1,5 @@
 #!/bin/sh
 
-MSG_NO_RUNNING_CONTAINER="No container running. Use the \"./run\" script to launch it."
-
 get_container_id() {
     SERVICE_NAME=$1
     if [ "$SERVICE_NAME" = "" ]; then
@@ -12,9 +10,9 @@ get_container_id() {
     . .env
     set +a
 
-    CONTAINER_ID=$(docker container ls --quiet --filter name="${COMPOSE_PROJECT_NAME}_${SERVICE_NAME}")
+    CONTAINER_ID=$(docker container ls --quiet --filter name="boateng_${SERVICE_NAME}")
     if [ "$CONTAINER_ID" = "" ]; then
-        echo "$MSG_NO_RUNNING_CONTAINER"
+        echo "No container running. Use the \"./run\" script to launch it."
         return 1
     else
         echo "$CONTAINER_ID"

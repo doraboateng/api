@@ -15,4 +15,4 @@ fi
 
 echo "Launching shell in \"$SERVICE_NAME\" container..."
 
-docker exec --interactive --tty "$CONTAINER_ID" sh
+docker exec --interactive --tty "$CONTAINER_ID" bash

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-./scripts/check-setup.sh
+./scripts/create-env.sh
 . scripts/utils.sh
 
 # Stop the container.

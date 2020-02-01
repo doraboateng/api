@@ -1,14 +1,9 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-./scripts/check-setup.sh
+. scripts/utils.sh
 
-set -a
-source .env
-set +a
-
-DOCKER_CONTAINER_ID=$(docker container ls | grep "boateng_api" | cut -c 1-12)
-if [[ $DOCKER_CONTAINER_ID == "" ]]; then
-    echo "No container running."
+if CONTAINER_ID=$(get_container_id api); then
+    docker container logs "$CONTAINER_ID" --follow
 else
-    docker container logs "$DOCKER_CONTAINER_ID" --follow --tail 10
+    echo "No container running."
 fi

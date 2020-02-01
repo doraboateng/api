@@ -1,10 +1,11 @@
 ARG GO_VERSION=1.13.7
 
 # Dev stage.
-FROM golang:${GO_VERSION}-alpine AS dev
+FROM golang:${GO_VERSION} AS dev
 LABEL version="0.2.0"
 
-RUN apk add curl git htop vim
+RUN apt-get update && \
+    apt-get --assume-yes install --no-install-recommends curl git htop vim
 
 RUN cd /tmp && \
     curl --location \

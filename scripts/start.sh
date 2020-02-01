@@ -1,21 +1,20 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-./scripts/check-setup.sh
+./scripts/create-env.sh
 ./scripts/check-docker-image.sh
 
 set -a
-source .env
+. .env
 set +a
 
-# Launch the API.
 docker-compose up --detach
 
 # Check container status.
 sleep 1
-RUNNING=$(docker container ls --filter name="boateng_api" --quiet)
-if [[ $RUNNING == "" ]]; then
+CONTAINER_ID=$(docker container ls --filter name="boateng_api" --quiet)
+if [[ $CONTAINER_ID == "" ]]; then
     echo "Could not launch container. Dumping latest logs..."
-    CONTAINER_ID=$(docker container ls -a | grep "boateng_api" | cut -c 1-12)
+    CONTAINER_ID=$(docker container ls --all --filter name="boateng_api" --quiet)
     docker container logs "$CONTAINER_ID" --tail 10
 
     echo ""
@@ -27,5 +26,5 @@ if [[ $1 != "--quiet" ]]; then
     echo ""
     echo "You can view the logs from the API by running \"./run logs\"."
     echo "To stop the API, use \"./run stop\"."
-    echo "Docker container: $RUNNING"
+    echo "Docker container: $CONTAINER_ID"
 fi

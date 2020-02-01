@@ -4,6 +4,7 @@
 - [Setup](#setup)
   - [Required software](#required-software)
   - [Recommended software](#recommended-software)
+- [Tests](#tests)
 
 </details>
 
@@ -18,3 +19,12 @@
 - [Visual Studio Code](https://code.visualstudio.com) with the [Remote Development extensions](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack).
 - [DBeaver](https://dbeaver.io) (or [alternative](https://alternativeto.net/software/dbeaver)) for inspecting databases.
 - [yEd Graph Editor](https://www.yworks.com/products/yed)
+
+# Tests
+
+>TODO
+
+```shell
+./run shell
+go test -cover ./...
+```
