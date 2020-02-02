@@ -4,7 +4,11 @@ ARG GO_VERSION=1.13.7
 FROM golang:${GO_VERSION}-alpine AS dev
 LABEL version="0.7.0"
 
-RUN apk add curl git htop vim && \
+RUN apk add --no-cache \
+        curl \
+        git \
+        htop \
+        vim && \
     cd /tmp && \
     curl --location \
         https://github.com/golang-migrate/migrate/releases/download/v4.8.0/migrate.linux-amd64.tar.gz \
