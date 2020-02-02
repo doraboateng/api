@@ -1,20 +1,19 @@
 ARG GO_VERSION=1.13.7
 
 # Dev stage.
-FROM golang:${GO_VERSION} AS dev
-LABEL version="0.2.0"
+FROM golang:${GO_VERSION}-alpine AS dev
+LABEL version="0.7.0"
 
-RUN apt-get update && \
-    apt-get --assume-yes install --no-install-recommends curl git htop vim
-
-RUN cd /tmp && \
+RUN apk add curl git htop vim && \
+    cd /tmp && \
     curl --location \
         https://github.com/golang-migrate/migrate/releases/download/v4.8.0/migrate.linux-amd64.tar.gz \
         | tar xvz && \
     mv ./migrate.linux-amd64 /usr/bin/migrate
 
-ADD . /root/boateng-api
-WORKDIR /root/boateng-api/src
+ARG PROJECT_ROOT=/root/boateng-api
+ADD . ${PROJECT_ROOT}
+WORKDIR ${PROJECT_ROOT}/src
 
 RUN go get -u -v \
         database/sql github.com/go-sql-driver/mysql \
@@ -26,18 +25,17 @@ FROM dev as build
 ARG BUILD_VERSION
 ARG GIT_HASH
 ARG BUILD_NAME
-RUN go build \
+RUN CGO_ENABLED=0 GOOS=linux go build \
         -ldflags "-X main.version=${BUILD_VERSION} -X main.gitHash=${GIT_HASH}" \
-        -o ${BUILD_NAME}
+        -o /tmp/${BUILD_NAME}
+RUN chmod +x /tmp/${BUILD_NAME}
 
 # Production stage.
 FROM scratch AS prod
 
-ENV APP_BUILD_PATH="/var/app" \
-    APP_BUILD_NAME="main"
-WORKDIR ${APP_BUILD_PATH}
-COPY --from=build ${APP_BUILD_PATH}/${APP_BUILD_NAME} ${APP_BUILD_PATH}/
+ARG BUILD_NAME
+WORKDIR /var/app
+COPY --from=build /tmp/${BUILD_NAME} /var/app/boateng-api
 
 EXPOSE ${APP_PORT}
-ENTRYPOINT ["/var/app/main"]
-CMD ""
+ENTRYPOINT ["/var/app/boateng-api"]

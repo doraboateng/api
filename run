@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Exit on error
+set -e
+
 HELP="Use the \"help\" command to list available scripts."
 
 # Determine which shell script to run.
