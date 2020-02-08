@@ -41,5 +41,8 @@ ARG BUILD_NAME
 WORKDIR /var/app
 COPY --from=build /tmp/${BUILD_NAME} /var/app/boateng-api
 
+HEALTHCHECK --timeout=10s \
+    CMD curl --fail http://localhost:${APP_PORT}/health || exit 1
+
 EXPOSE ${APP_PORT}
 ENTRYPOINT ["/var/app/boateng-api"]
