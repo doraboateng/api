@@ -7,11 +7,11 @@
 
 ```shell
 # Clone the repository.
-git clone git@github.com:doraboateng/api.git
-cd api
+git clone https://github.com/kwcay/boateng-api.git
+cd boateng-api
 
-# Run the database migrations. This will launch the API locally, build
-# the base image and run the migration files.
+# Run the database migrations. This will build the Docker image and container
+# if they don't already exist before running the API on your machine.
 ./run migrate
 
 # Launch your IDE.
@@ -20,7 +20,24 @@ code .
 
 </details>
 
-# Docs
+<details>
+  <summary>Contents</summary>
 
-- [Contributing ↗](https://github.com/doraboateng/api/blob/stable/docs/contributing.md)
-- [Deploying ↗](https://github.com/doraboateng/api/blob/stable/docs/deploying.md)
+- [Reporting Bugs](#reporting-bugs)
+- [Reporting Security Issues](#reporting-security-issues)
+- [Contributing (↗)](https://github.com/doraboateng/api/blob/stable/docs/contributing.md)
+- [Deploying (↗)](https://github.com/doraboateng/api/blob/stable/docs/deploying.md)
+
+</details>
+
+# Reporting Bugs
+
+>TODO
+
+# Reporting Security Issues
+
+>TODO
+
+# License
+
+Copyright © 2020 Kwahu & Cayes
