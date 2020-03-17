@@ -1,5 +1,14 @@
 #!/bin/sh
 
+# Make sure DB container exists.
+DB_ID=$(docker container ls --all --quiet --filter name=boateng_db)
+if [ "$DB_ID" = "" ]; then
+    docker-compose --project-name boateng up --no-start db
+
+    echo "The database service needs some time to start. Try again in a minute."
+    exit 0
+fi
+
 ./scripts/start.sh --quiet
 . scripts/utils.sh
 
