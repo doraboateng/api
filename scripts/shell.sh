@@ -15,4 +15,10 @@ fi
 
 echo "Launching shell in \"$SERVICE_NAME\" container..."
 
-docker exec --interactive --tty "$CONTAINER_ID" ash
+SHELL="ash"
+
+if [ "$SERVICE_NAME" != "api" ]; then
+    SHELL="bash"
+fi
+
+docker exec --interactive --tty "$CONTAINER_ID" "$SHELL"
