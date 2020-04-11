@@ -15,3 +15,7 @@ fi
 if CONTAINER_ID=$(get_container_id db); then
     docker stop "$CONTAINER_ID" > /dev/null
 fi
+
+if CONTAINER_ID=$(get_container_id graph); then
+    docker stop "$CONTAINER_ID" > /dev/null
+fi

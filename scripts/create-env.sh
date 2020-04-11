@@ -26,6 +26,11 @@ if [ ! -f ./.env ]; then
         echo "DOCKER_HUB_TOKEN=$DOCKER_HUB_TOKEN"
 
         echo ""
+        echo "# JanusGraph"
+        echo "JANUSGRAPH_PORT=8182"
+        echo "JANUSGRAPH_HOST_PORT=8182"
+
+        echo ""
         echo "# MariaDB"
         echo "MARIADB_USERNAME=boateng_dev"
         echo "MARIADB_PASSWORD=boateng_dev"

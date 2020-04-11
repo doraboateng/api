@@ -5,7 +5,8 @@ services:
     command: air
     depends_on:
       - db
-    env_file: ./.env
+      - graph
+    env_file: .env
     ports:
       - "$APP_PORT:$APP_PORT"
     volumes:
@@ -19,3 +20,15 @@ services:
     image: mariadb:10.4.6
     ports:
       - "$MARIADB_HOST_PORT:$MARIADB_PORT"
+  graph:
+    image: dgraph/standalone:v2.0.0-rc1
+    ports:
+      - 8000:8000
+      - 8080:8080
+      - 9080:9080
+    volumes:
+      - ./data:/tmp/dgraph-data
+  # graph:
+  #   image: janusgraph/janusgraph
+  #   ports:
+  #     - "$JANUSGRAPH_HOST_PORT:$JANUSGRAPH_PORT"
