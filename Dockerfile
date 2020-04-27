@@ -78,7 +78,8 @@ FROM scratch AS prod
 ARG BUILD_VERSION
 ARG GIT_HASH
 
-COPY --from=base /boateng-api/src/graph/schema/*.{dgraph,gql} /opt/
+COPY --from=base /boateng-api/src/graph/schema/*.dgraph /opt/
+COPY --from=base /boateng-api/src/graph/schema/*.gql /opt/
 COPY --from=build /tmp/boateng-api /usr/local/bin/boateng-api
 
 ENV BOATENG_ENV=production

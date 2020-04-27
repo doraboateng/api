@@ -37,6 +37,7 @@ func GetHealth(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// GetPing ...
 func GetPing(writer http.ResponseWriter, request *http.Request) {
 	writer.Write([]byte("pong"))
 }
