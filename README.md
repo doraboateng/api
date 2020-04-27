@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/doraboateng/api.svg?branch=stable)](https://travis-ci.com/doraboateng/api)
+[![Build Status](https://travis-ci.com/kwcay/boateng-api.svg?branch=stable)](https://travis-ci.com/kwcay/boateng-api)
 [![Maintainability](https://api.codeclimate.com/v1/badges/eaf38d5d227bbeb85571/maintainability)](https://codeclimate.com/github/kwcay/boateng-api/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/eaf38d5d227bbeb85571/test_coverage)](https://codeclimate.com/github/kwcay/boateng-api/test_coverage)
 
