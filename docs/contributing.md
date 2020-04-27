@@ -22,9 +22,6 @@ go generate ./...
 
 # Tests
 
->TODO
-
 ```shell
-./run shell
-go test -cover ./...
+docker-compose run --no-deps --rm api go test -cover ./...
 ```
