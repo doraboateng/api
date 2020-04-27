@@ -1,11 +1,12 @@
 version: 2
 
-# Configuration of maintainability checks
 checks:
   file-lines:
     enabled: false
 
-# Enable optional engines to run in addition to your analysis
+exclude_patterns:
+  - "src/graph/generated/*.go"
+
 plugins:
   gofmt:
     enabled: true

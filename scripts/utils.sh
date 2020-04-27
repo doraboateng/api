@@ -26,9 +26,9 @@ get_container_id() {
     . .env
     set +a
 
-    CONTAINER_ID=$(docker container ls --quiet --filter name="boateng_${SERVICE_NAME}")
+    CONTAINER_ID=$(docker container ls --quiet --filter name="${COMPOSE_PROJECT_NAME}_${SERVICE_NAME}")
     if [ "$CONTAINER_ID" = "" ]; then
-        echo "No container running. Use the \"./run\" script to launch it."
+        echo "No container running for service \"${SERVICE_NAME}\"."
         return 1
     else
         echo "$CONTAINER_ID"
@@ -36,23 +36,10 @@ get_container_id() {
     fi
 }
 
-get_version() {
-    VERSION=$(sed -n -e 's/LABEL version="\(.*\)"/\1/p' Dockerfile)
-
-    if [ "$VERSION" = "" ]; then
-        echo "Could not retrieve version from Dockerfile."
-        echo "Make sure a \"version\" label is specified and try again."
-        
-        return 1
-    else
-        echo "$VERSION"
-
-        return 0
-    fi
-}
-
 image_exists() {
-    if [ "$(docker images --quiet $1)" = "" ]; then
+    IMAGE_ID=$(docker images --quiet "$1")
+
+    if [ "$IMAGE_ID" = "" ]; then
         return 1
     fi
 

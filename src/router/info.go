@@ -1,4 +1,4 @@
-package handlers
+package router
 
 import (
 	"net/http"
@@ -35,6 +35,11 @@ func GetHealth(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, utils.RenderingError(err))
 		return
 	}
+}
+
+// GetPing ...
+func GetPing(writer http.ResponseWriter, request *http.Request) {
+	writer.Write([]byte("pong"))
 }
 
 // ---
