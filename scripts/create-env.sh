@@ -16,29 +16,23 @@ if [ ! -f ./.env ]; then
     read -r DOCKER_HUB_TOKEN
 
     {
-        echo "# App"
-        echo "APP_ENV=local"
-        echo "APP_PORT=8008"
+        echo "# API"
+        echo "BOATENG_ENV=local"
+        echo "BOATENG_API_PORT=8800"
+
+        echo ""
+        echo "# Dgraph"
+        echo "DGRAPH_VERSION=v20.03.1"
+
+        echo ""
+        echo "# Docker"
+        echo "COMPOSE_PROJECT_NAME=boateng-api"
 
         echo ""
         echo "# Credentials"
         echo "DOCKER_HUB_USERNAME=$DOCKER_HUB_USERNAME"
         echo "DOCKER_HUB_TOKEN=$DOCKER_HUB_TOKEN"
-
-        echo ""
-        echo "# JanusGraph"
-        echo "JANUSGRAPH_PORT=8182"
-        echo "JANUSGRAPH_HOST_PORT=8182"
-
-        echo ""
-        echo "# MariaDB"
-        echo "MARIADB_USERNAME=boateng_dev"
-        echo "MARIADB_PASSWORD=boateng_dev"
-        echo "MARIADB_DATABASE=boateng_dev"
-        echo "MARIADB_HOST=db"
-        echo "MARIADB_PORT=3306"
-        echo "MARIADB_HOST_PORT=13306"
     } >> ./.env
 
-    echo "Done!"
+    echo "Environment file created."
 fi

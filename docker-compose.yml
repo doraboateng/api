@@ -1,34 +1,75 @@
-version: "3.5"
+# Reference: https://github.com/dgraph-io/dgraph/blob/master/dgraph/docker-compose.yml
+version: "3.4"
 services:
+
+  # API
   api:
-    image: doraboateng/api-dev:latest
+    image: doraboateng/api:dev
+    build:
+      context: "."
+      target: dev
     command: air
     depends_on:
-      - db
-      - graph
+      - zero
+      - alpha
     env_file: .env
     ports:
-      - "$APP_PORT:$APP_PORT"
+      - "8800:8800"
     volumes:
-      - .:/root/boateng-api
-  db:
-    environment:
-      MYSQL_DATABASE: $MARIADB_DATABASE
-      MYSQL_USER: $MARIADB_USERNAME
-      MYSQL_PASSWORD: $MARIADB_PASSWORD
-      MYSQL_ROOT_PASSWORD: $MARIADB_PASSWORD
-    image: mariadb:10.4.6
+      - .:/boateng-api
+
+  # Dgraph Zero
+  zero:
+    image: dgraph/dgraph:${DGRAPH_VERSION}
+    command: >-
+      dgraph zero
+        --bindall
+        --block_rate 10
+        --expose_trace
+        --logtostderr
+        --my=zero:5080
+        --profile_mode block
+        -v=2
+    env_file: .env
     ports:
-      - "$MARIADB_HOST_PORT:$MARIADB_PORT"
-  graph:
-    image: dgraph/standalone:v2.0.0-rc1
-    ports:
-      - 8000:8000
-      - 8080:8080
-      - 9080:9080
+      - "8819:6080"
     volumes:
-      - ./data:/tmp/dgraph-data
-  # graph:
-  #   image: janusgraph/janusgraph
-  #   ports:
-  #     - "$JANUSGRAPH_HOST_PORT:$JANUSGRAPH_PORT"
+      - ./data/dgraph/zero:/data/zero
+    working_dir: /data/zero
+
+  # Dgraph Alpha
+  alpha:
+    image: dgraph/dgraph:${DGRAPH_VERSION}
+    command: >-
+      dgraph alpha
+        --block_rate 10
+        --expose_trace
+        --logtostderr
+        --lru_mb=1024
+        --my=alpha:7080
+        --profile_mode block
+        --trace 1.0
+        -v=2
+        --zero=zero:5080
+    env_file: .env
+    depends_on:
+      - zero
+    ports:
+      - 8817:8080
+      - 8818:7080
+    volumes:
+      - ./data/dgraph/alpha:/data/alpha
+    working_dir: /data/alpha
+
+  # Dgraph Ratel
+  ratel:
+    image: dgraph/dgraph:${DGRAPH_VERSION}
+    command: dgraph-ratel -addr alpha:7080
+    env_file: .env
+    depends_on:
+      - alpha
+    ports:
+      - 8811:8000
+    volumes:
+      - ./data/dgraph/ratel:/data/ratel
+    working_dir: /data/ratel

@@ -1,17 +1,15 @@
 package router
 
 import (
-	"net/http"
 	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/render"
-	"github.com/kwcay/boateng-api/src/handlers"
 )
 
-// Create - Sets up the router and middleware, and defines all API routes.
+// Create sets up the router and middleware, and defines all API routes.
 func Create() *chi.Mux {
 	// Create new router.
 	router := chi.NewRouter()
@@ -21,7 +19,7 @@ func Create() *chi.Mux {
 		middleware.RedirectSlashes,
 		middleware.Logger,
 		middleware.Recoverer,
-		middleware.DefaultCompress,
+		middleware.Compress(5),
 		render.SetContentType(render.ContentTypeJSON),
 		cors.New(GetCorsOptions()).Handler,
 	)
@@ -32,24 +30,13 @@ func Create() *chi.Mux {
 	router.Use(middleware.Timeout(60 * time.Second))
 
 	// Informational routes
-	router.Get("/health", handlers.GetHealth)
-	router.Get("/locales", handlers.LocalesHandler)
-	router.Get("/", func(writer http.ResponseWriter, request *http.Request) {
-		writer.Write([]byte("Dora Boateng API"))
-	})
+	router.Get("/", GetHealth)
+	router.Get("/health", GetHealth)
+	router.Get("/ping", GetPing)
 
-	// Definitions.
-	router.Route("/definitions", handlers.DefinitionsHandler)
-	router.Route("/languages", handlers.LanguagesHandler)
-
-	// Test routes
-	router.Get("/ping", func(writer http.ResponseWriter, request *http.Request) {
-		writer.Write([]byte("pong"))
-	})
-
-	router.Get("/panic", func(writer http.ResponseWriter, request *http.Request) {
-		panic("test")
-	})
+	// GraphQL.
+	router.Post("/graphql", GraphHandler)
+	router.Post("/refresh-schema", RefreshSchemaHandler)
 
 	return router
 }

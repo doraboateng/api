@@ -9,6 +9,9 @@
 # Environment
 .env
 
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
 # Temporary files
 builds/*
 !builds/.gitkeep

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# DEPRECATED
+
 # Make sure DB container exists.
 DB_ID=$(docker container ls --all --quiet --filter name=boateng_db)
 if [ "$DB_ID" = "" ]; then

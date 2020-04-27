@@ -1,12 +1,18 @@
-# Ignore all files not relevant to Docker image.
-.devcontainer/
 .git/
+.github/
 .vscode/
+docs/
 scripts/
 tmp/
+
+.devcontainer.json
 .env
-.env.example
+.env.*
+.gitignore
 .travis.yml
 docker-compose*
+LICENSE
 README.md
 run
+*.md
+*.out

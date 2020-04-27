@@ -49,74 +49,70 @@ enum ReferenceType {
 }
 
 type Alphabet {
-  code: String! @id # Directives: @upsert
-  name: String! # Directives: @lang
+  code: String!
+  name: String!
   script: Script
   characters: String
-  languages: [Language] @hasInverse(field: alphabets)
+  languages: [Language]
   references: [Reference]
 }
 
 type Expression {
-  id: ID! # TODO
-  type: ExpressionType! @search(by: [hash])
+  id: ID! # TODO...
+  type: ExpressionType!
   titles: [Transliteration!]!
   languages: [Language!]!
-  partOfSpeech: PartOfSpeech @search(by: [hash])
-  nounType: NounType @search(by: [hash])
+  partOfSpeech: PartOfSpeech
+  nounType: NounType
   lexeme: Expression # When the lexeme references itself, we have a lemma.
-  literalTranslation: String # Directives: @lang
-  practicalTranslation: String # Directives: @lang
-  meaning: String # Directives: @lang
+  literalTranslation: String
+  practicalTranslation: String
+  meaning: String
   tags: [Tag]
   relatedExpressions: [Expression] # Synonyms, antonyms, compound words maybe
   references: [Reference]
 }
 
 type Language {
-  code: String! @id # Directives: @upsert
+  code: String!
   names: [Transliteration!]!
   parent: Language
   lexifier: Language
   relatedLanguages: [Language]
-  glottologId: String @search(by: [hash])
-  alphabets: [Alphabet] @hasInverse(field: languages)
-  isFamily: Boolean @search
+  glottologId: String
+  alphabets: [Alphabet]
+  isFamily: Boolean
   references: [Reference]
 }
 
-# type Media {
-#   # TODO
-# }
-
 type Reference {
-  type: ReferenceType! @search(by: [hash])
+  type: ReferenceType!
   mla: String
 }
 
 type Script {
-  code: String! @id # Directives: @upsert
+  code: String!
   names: [Transliteration]
 }
 
 type Story {
-  type: StoryType! @search(by: [hash])
-  lines: [StoryLine]! @hasInverse(field: story)
+  type: StoryType!
+  lines: [StoryLine]!
   language: Language
   script: Script
 }
 
 type StoryLine {
-  story: Story! @hasInverse(field: lines)
+  story: Story!
   content: String!
 }
 
 type Tag {
-  name: String! @search(by: [hash]) # Directives: @lang
+  name: String!
 }
 
 type Transliteration {
-  value: String! @search(by: [hash])
-  transliterationLangCode: String @search(by: [hash])
-  transliterationScriptCode: String @search(by: [hash])
+  value: String!
+  transliterationLangCode: String
+  transliterationScriptCode: String
 }

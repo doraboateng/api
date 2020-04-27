@@ -1,6 +1,5 @@
 #!/bin/sh
 
-./scripts/start.sh --quiet
 . scripts/utils.sh
 
 SERVICE_NAME=$1
@@ -15,10 +14,4 @@ fi
 
 echo "Launching shell in \"$SERVICE_NAME\" container..."
 
-SHELL="ash"
-
-if [ "$SERVICE_NAME" != "api" ]; then
-    SHELL="bash"
-fi
-
-docker exec --interactive --tty "$CONTAINER_ID" "$SHELL"
+docker exec --interactive --tty "$CONTAINER_ID" bash
