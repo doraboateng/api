@@ -33,6 +33,10 @@
 
 If you're on Linux or Mac, you already have a POSIX-compliant terminal.
 
+**Optional, but recommended:**
+
+- [BuildKit](https://docs.docker.com/develop/develop-images/build_enhancements)
+
 ## Running the API locally
 
 ```shell

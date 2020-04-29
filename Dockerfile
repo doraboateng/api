@@ -7,9 +7,6 @@ RUN apt-get update \
     && apt-get upgrade --yes \
     && rm -rf /var/lib/apt/lists/*
 
-ADD . /boateng-api
-WORKDIR /boateng-api
-
 # Development stage.
 FROM base AS dev
 
@@ -64,11 +61,13 @@ FROM base as build
 
 ARG BUILD_VERSION
 ARG GIT_HASH
+
+ADD . /boateng-api
 WORKDIR /boateng-api/src
 RUN CGO_ENABLED=0 GOOS=linux go build \
         -ldflags "-X main.version=${BUILD_VERSION} -X main.gitHash=${GIT_HASH}" \
-        -o /tmp/boateng-api
-RUN chmod +x /tmp/boateng-api
+        -o /tmp/boateng-api-bin
+RUN chmod +x /tmp/boateng-api-bin
 
 # Production stage.
 # TODO: should we be using Alpine (alpine:3.9.6) or Distroless
@@ -78,9 +77,9 @@ FROM scratch AS prod
 ARG BUILD_VERSION
 ARG GIT_HASH
 
-COPY --from=base /boateng-api/src/graph/schema/*.dgraph /opt/
-COPY --from=base /boateng-api/src/graph/schema/*.gql /opt/
-COPY --from=build /tmp/boateng-api /usr/local/bin/boateng-api
+COPY --from=build /boateng-api/src/graph/schema/*.dgraph /opt/
+COPY --from=build /boateng-api/src/graph/schema/*.gql /opt/
+COPY --from=build /tmp/boateng-api-bin /usr/local/bin/boateng-api
 
 ENV BOATENG_ENV=production
 ENV GRAPH_SCHEMA_PATH=/opt/graph.gql
