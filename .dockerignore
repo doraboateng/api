@@ -12,7 +12,6 @@ tmp/
 .travis.yml
 docker-compose*
 LICENSE
-README.md
 run
 *.md
 *.out

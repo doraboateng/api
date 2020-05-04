@@ -58,7 +58,7 @@ type Alphabet {
 }
 
 type Expression {
-  id: ID! # TODO...
+  uuid: String! # RFC 4122 UUID as a 32-character hexadecimal string.
   type: ExpressionType!
   titles: [Transliteration!]!
   languages: [Language!]!
@@ -112,6 +112,7 @@ type Tag {
 }
 
 type Transliteration {
+  hash: String
   value: String!
   transliterationLangCode: String
   transliterationScriptCode: String
