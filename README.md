@@ -106,4 +106,6 @@ For more details, see the [docs](https://docs.docker.com/compose/reference/logs)
 
 # License
 
-[GNU General Public License v3](https://github.com/kwcay/boateng-graph-service/blob/stable/LICENSE) © Kwahu & Cayes
+[GNU General Public License v3](https://github.com/kwcay/boateng-api/blob/stable/LICENSE)
+
+Copyright © Kwahu & Cayes
