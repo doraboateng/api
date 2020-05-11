@@ -22,7 +22,10 @@ func (r *queryResolver) Language(ctx context.Context, code string) (*generated.L
 	query := `
 		query GetLanguage($code: string) {
 			result(func: eq(<Language.code>, $code)) {
-				expand(_all_)
+				<Language.code>
+				<Language.names> {
+					<Transliteration.value>
+				}
 			}
 		}
 	`
@@ -36,6 +39,7 @@ func (r *queryResolver) Language(ctx context.Context, code string) (*generated.L
 	// Convert Dgraph's JSON shape into the intended JSON shape so
 	// we can unmarshal it properly.
 	responseJSON := strings.ReplaceAll(string(response.Json), "Language.", "")
+	responseJSON = strings.ReplaceAll(responseJSON, "Transliteration.", "")
 
 	type ResponseObj struct {
 		Result []generated.Language `json:"result"`

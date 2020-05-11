@@ -114,6 +114,6 @@ type Tag {
 type Transliteration {
   hash: String
   value: String!
-  transliterationLangCode: String
-  transliterationScriptCode: String
+  langCode: String
+  scriptCode: String
 }
