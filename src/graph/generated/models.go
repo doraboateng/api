@@ -18,7 +18,7 @@ type Alphabet struct {
 }
 
 type Expression struct {
-	ID                   string             `json:"id"`
+	UUID                 string             `json:"uuid"`
 	Type                 ExpressionType     `json:"type"`
 	Titles               []*Transliteration `json:"titles"`
 	Languages            []*Language        `json:"languages"`
@@ -72,6 +72,7 @@ type Tag struct {
 }
 
 type Transliteration struct {
+	Hash                      *string `json:"hash"`
 	Value                     string  `json:"value"`
 	TransliterationLangCode   *string `json:"transliterationLangCode"`
 	TransliterationScriptCode *string `json:"transliterationScriptCode"`

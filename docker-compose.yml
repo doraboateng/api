@@ -17,6 +17,7 @@ services:
       - "8800:8800"
     volumes:
       - .:/boateng-api
+    working_dir: /boateng-api
 
   # Dgraph Zero
   zero:

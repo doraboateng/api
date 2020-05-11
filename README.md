@@ -10,6 +10,7 @@
     - [Running the API locally](#running-the-api-locally)
     - [Published Ports](#published-ports)
     - [Viewing the log outputs from the services](#viewing-the-log-outputs-from-the-services)
+    - [Dgraph live loader](#dgraph-live-loader)
 - [Reporting Bugs](#reporting-bugs)
 - [Reporting Security Issues](#reporting-security-issues)
 - [Contributing](https://github.com/kwcay/boateng-graph-service/blob/stable/docs/contributing.md)
@@ -95,6 +96,25 @@ docker-compose logs --follow api alpha zero
 ```
 
 For more details, see the [docs](https://docs.docker.com/compose/reference/logs) or run the command `docker-compose logs --help`
+
+## Dgraph live loader
+
+```shell
+# Copy/download an RDF backup file.
+cp /path/to/rdf data/dgraph/alpha/
+
+# ...
+./run shell alpha
+ls -lhs
+tar --extract --gzip --file doraboateng.2020-05-04.026700.rdf.tar.gz
+ls -Rlhs export/
+dgraph live \
+    --alpha 127.0.0.1:9080 \
+    --files export/dgraph.r43579.u0504.0252/g01.rdf.gz \
+    --schema export/dgraph.r43579.u0504.0252/g01.schema.gz \
+    --use_compression \
+    --zero zero:5080
+```
 
 # Reporting Bugs
 

@@ -17,7 +17,15 @@ code .
 
 ```shell
 ./run shell
-go generate ./...
+go generate ./src/...
+```
+
+# Resetting Dgraph
+
+```shell
+docker-compose down
+rm -rf data/dgraph/*
+docker-compose up --detach
 ```
 
 # Tests

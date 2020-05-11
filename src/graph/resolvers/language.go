@@ -11,9 +11,6 @@ import (
 
 type languageResolver struct{ *Resolver }
 
-// Assert that todoResolver conforms to the generated.TodoResolver interface
-// var _ generated.LanguageResolver = (*languageResolver)(nil)
-
 func (r *queryResolver) Language(ctx context.Context, code string) (*generated.Language, error) {
 	transaction := r.Dgraph.NewReadOnlyTxn()
 	defer transaction.Discard(ctx)

@@ -51,7 +51,6 @@ type ComplexityRoot struct {
 	}
 
 	Expression struct {
-		ID                   func(childComplexity int) int
 		Languages            func(childComplexity int) int
 		Lexeme               func(childComplexity int) int
 		LiteralTranslation   func(childComplexity int) int
@@ -64,6 +63,7 @@ type ComplexityRoot struct {
 		Tags                 func(childComplexity int) int
 		Titles               func(childComplexity int) int
 		Type                 func(childComplexity int) int
+		UUID                 func(childComplexity int) int
 	}
 
 	Language struct {
@@ -112,6 +112,7 @@ type ComplexityRoot struct {
 	}
 
 	Transliteration struct {
+		Hash                      func(childComplexity int) int
 		TransliterationLangCode   func(childComplexity int) int
 		TransliterationScriptCode func(childComplexity int) int
 		Value                     func(childComplexity int) int
@@ -181,13 +182,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Alphabet.Script(childComplexity), true
-
-	case "Expression.id":
-		if e.complexity.Expression.ID == nil {
-			break
-		}
-
-		return e.complexity.Expression.ID(childComplexity), true
 
 	case "Expression.languages":
 		if e.complexity.Expression.Languages == nil {
@@ -272,6 +266,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Expression.Type(childComplexity), true
+
+	case "Expression.uuid":
+		if e.complexity.Expression.UUID == nil {
+			break
+		}
+
+		return e.complexity.Expression.UUID(childComplexity), true
 
 	case "Language.alphabets":
 		if e.complexity.Language.Alphabets == nil {
@@ -446,6 +447,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Tag.Name(childComplexity), true
 
+	case "Transliteration.hash":
+		if e.complexity.Transliteration.Hash == nil {
+			break
+		}
+
+		return e.complexity.Transliteration.Hash(childComplexity), true
+
 	case "Transliteration.transliterationLangCode":
 		if e.complexity.Transliteration.TransliterationLangCode == nil {
 			break
@@ -577,7 +585,7 @@ type Alphabet {
 }
 
 type Expression {
-  id: ID! # TODO...
+  uuid: String! # RFC 4122 UUID as a 32-character hexadecimal string.
   type: ExpressionType!
   titles: [Transliteration!]!
   languages: [Language!]!
@@ -631,6 +639,7 @@ type Tag {
 }
 
 type Transliteration {
+  hash: String
   value: String!
   transliterationLangCode: String
   transliterationScriptCode: String
@@ -913,7 +922,7 @@ func (ec *executionContext) _Alphabet_references(ctx context.Context, field grap
 	return ec.marshalOReference2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐReference(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Expression_id(ctx context.Context, field graphql.CollectedField, obj *Expression) (ret graphql.Marshaler) {
+func (ec *executionContext) _Expression_uuid(ctx context.Context, field graphql.CollectedField, obj *Expression) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -930,7 +939,7 @@ func (ec *executionContext) _Expression_id(ctx context.Context, field graphql.Co
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return obj.UUID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -944,7 +953,7 @@ func (ec *executionContext) _Expression_id(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Expression_type(ctx context.Context, field graphql.CollectedField, obj *Expression) (ret graphql.Marshaler) {
@@ -2184,6 +2193,37 @@ func (ec *executionContext) _Tag_name(ctx context.Context, field graphql.Collect
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Transliteration_hash(ctx context.Context, field graphql.CollectedField, obj *Transliteration) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Transliteration",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Hash, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Transliteration_value(ctx context.Context, field graphql.CollectedField, obj *Transliteration) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3394,8 +3434,8 @@ func (ec *executionContext) _Expression(ctx context.Context, sel ast.SelectionSe
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Expression")
-		case "id":
-			out.Values[i] = ec._Expression_id(ctx, field, obj)
+		case "uuid":
+			out.Values[i] = ec._Expression_uuid(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -3736,6 +3776,8 @@ func (ec *executionContext) _Transliteration(ctx context.Context, sel ast.Select
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Transliteration")
+		case "hash":
+			out.Values[i] = ec._Transliteration_hash(ctx, field, obj)
 		case "value":
 			out.Values[i] = ec._Transliteration_value(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -4124,20 +4166,6 @@ func (ec *executionContext) unmarshalNExpressionType2githubᚗcomᚋkwcayᚋboat
 
 func (ec *executionContext) marshalNExpressionType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐExpressionType(ctx context.Context, sel ast.SelectionSet, v ExpressionType) graphql.Marshaler {
 	return v
-}
-
-func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
-	return graphql.UnmarshalID(v)
-}
-
-func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalID(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
 }
 
 func (ec *executionContext) marshalNLanguage2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐLanguage(ctx context.Context, sel ast.SelectionSet, v Language) graphql.Marshaler {
