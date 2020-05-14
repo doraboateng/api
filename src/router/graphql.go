@@ -7,7 +7,6 @@ import (
 	"github.com/kwcay/boateng-api/src/graph"
 	"github.com/kwcay/boateng-api/src/graph/generated"
 	"github.com/kwcay/boateng-api/src/graph/resolvers"
-	"github.com/kwcay/boateng-graph-service/src/dgraph"
 )
 
 // GraphHandler handles all incoming GraphQL requests.
@@ -34,7 +33,7 @@ func GraphHandler(writer http.ResponseWriter, request *http.Request) {
 
 // RefreshSchemaHandler ...
 func RefreshSchemaHandler(writer http.ResponseWriter, request *http.Request) {
-	client, closeConn := dgraph.GetClient()
+	client, closeConn := graph.GetClient()
 	defer closeConn()
 
 	graph.LoadSchema(client)
