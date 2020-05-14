@@ -8,7 +8,6 @@ require (
 	github.com/go-chi/chi v4.1.1+incompatible
 	github.com/go-chi/cors v1.1.1
 	github.com/go-chi/render v1.0.1
-	github.com/kwcay/boateng-graph-service v0.0.0-20200426174200-adf9a92401cf
 	github.com/vektah/gqlparser/v2 v2.0.1
 	google.golang.org/grpc v1.29.1
 )
