@@ -1,0 +1,11 @@
+{
+  "functions": {
+    "api/vercel.go": {
+      "excludeFiles": "go.sum",
+      "includeFiles": "",
+      "maxDuration": 10,
+      "memory": 1024
+    }
+  },
+  "version": 2
+}
