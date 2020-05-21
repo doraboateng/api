@@ -97,6 +97,26 @@ docker-compose logs --follow api alpha zero
 
 For more details, see the [docs](https://docs.docker.com/compose/reference/logs) or run the command `docker-compose logs --help`
 
+## Export Dgraph data
+
+```shell
+./run shell alpha
+
+# Create RDF backup.
+curl --url http://localhost:8080/admin \
+    --header 'content-type: application/json' \
+    --data '{"query":"mutation {export(input: {format: \"rdf\"}) {response {message code}}}"}'
+tar --create --file temp.rdf.tar.gz --gzip $(ls --directory -t export/* | head -1)
+mv temp.rdf.tar.gz doraboateng.$(date +"%Y-%m-%d").$(sha1sum temp.rdf.tar.gz | cut -c 1-6).rdf.tar.gz
+
+# Note the name of the backup file, then exit the container.
+ls doraboateng.*.rdf.tar.gz
+exit
+
+# Copy RDF backup.
+docker cp boateng-api_alpha_1:/dgraph/doraboateng.2020-05-21.b406df.rdf.tar.gz tmp/
+```
+
 ## Dgraph live loader
 
 ```shell
