@@ -22,7 +22,7 @@ if [ ! -f ./.env ]; then
 
         echo ""
         echo "# Dgraph"
-        echo "DGRAPH_VERSION=v20.03.1"
+        echo "DGRAPH_VERSION=v20.03.2"
 
         echo ""
         echo "# Docker"

@@ -100,18 +100,22 @@ For more details, see the [docs](https://docs.docker.com/compose/reference/logs)
 ## Dgraph live loader
 
 ```shell
-# Copy/download an RDF backup file.
-cp /path/to/rdf data/dgraph/alpha/
+# Copy backup file into Dgraph Alpha container.
+docker cp /path/to/rdf boateng-api_alpha_1:/tmp/rdf.tar.gz
 
-# ...
+# Extract backup file.
 ./run shell alpha
-ls -lhs
-tar --extract --gzip --file doraboateng.2020-05-04.026700.rdf.tar.gz
-ls -Rlhs export/
+mkdir -p /tmp/restore/$(date +'%Y-%m-%d') \
+    && mv /tmp/rdf.tar.gz /tmp/restore/$(date +'%Y-%m-%d')/ \
+    && cd /tmp/restore/$(date +'%Y-%m-%d') \
+    && tar --extract --gzip --file rdf.tar.gz \
+    && cp export/**/* .
+
+# Load backup file.
 dgraph live \
-    --alpha 127.0.0.1:9080 \
-    --files export/dgraph.r43579.u0504.0252/g01.rdf.gz \
-    --schema export/dgraph.r43579.u0504.0252/g01.schema.gz \
+    --alpha 127.0.0.1:7080 \
+    --files g01.rdf.gz \
+    --schema g01.schema.gz \
     --use_compression \
     --zero zero:5080
 ```

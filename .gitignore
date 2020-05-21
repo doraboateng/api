@@ -15,8 +15,6 @@
 # Temporary files
 builds/*
 !builds/.gitkeep
-data/*
-!data/.gitkeep
 tmp/
 
 # Miscellaneous

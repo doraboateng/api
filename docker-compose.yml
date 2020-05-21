@@ -35,8 +35,7 @@ services:
     ports:
       - "8819:6080"
     volumes:
-      - ./data/dgraph/zero:/data/zero
-    working_dir: /data/zero
+      - dgraph_volume:/dgraph
 
   # Dgraph Alpha
   alpha:
@@ -59,8 +58,7 @@ services:
       - 8817:8080
       - 8818:7080
     volumes:
-      - ./data/dgraph/alpha:/data/alpha
-    working_dir: /data/alpha
+      - dgraph_volume:/dgraph
 
   # Dgraph Ratel
   ratel:
@@ -72,5 +70,7 @@ services:
     ports:
       - 8811:8000
     volumes:
-      - ./data/dgraph/ratel:/data/ratel
-    working_dir: /data/ratel
+      - dgraph_volume:/dgraph
+
+volumes:
+  dgraph_volume:
