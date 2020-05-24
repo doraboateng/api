@@ -4,7 +4,7 @@ type Query {
 
   expressions: [Expression!]!
 
-  languages: [Language!]!
+  languages(query: String): [Language!]!
   language(code: String!): Language
 }
 

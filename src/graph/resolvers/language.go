@@ -6,12 +6,12 @@ import (
 	"log"
 	"strings"
 
-	"github.com/kwcay/boateng-api/src/graph/generated"
+	"github.com/kwcay/boateng-api/src/graph/models"
 )
 
 type languageResolver struct{ *Resolver }
 
-func (r *queryResolver) Language(ctx context.Context, code string) (*generated.Language, error) {
+func (r *queryResolver) Language(ctx context.Context, code string) (*models.Language, error) {
 	transaction := r.Dgraph.NewReadOnlyTxn()
 	defer transaction.Discard(ctx)
 
@@ -42,7 +42,7 @@ func (r *queryResolver) Language(ctx context.Context, code string) (*generated.L
 	responseJSON = strings.ReplaceAll(responseJSON, "Transliteration.", "")
 
 	type ResponseObj struct {
-		Result []generated.Language `json:"result"`
+		Result []models.Language `json:"result"`
 	}
 
 	var responseObj ResponseObj
@@ -52,7 +52,7 @@ func (r *queryResolver) Language(ctx context.Context, code string) (*generated.L
 		return nil, err
 	}
 
-	var language *generated.Language
+	var language *models.Language
 
 	if len(responseObj.Result) == 1 {
 		language = &responseObj.Result[0]
@@ -62,26 +62,38 @@ func (r *queryResolver) Language(ctx context.Context, code string) (*generated.L
 }
 
 // Languages ...
-func (r *queryResolver) Languages(ctx context.Context) ([]*generated.Language, error) {
+func (r *queryResolver) Languages(
+	ctx context.Context,
+	searchQuery *string,
+) ([]*models.Language, error) {
 	transaction := r.Dgraph.NewReadOnlyTxn()
 	defer transaction.Discard(ctx)
 
-	response, err := transaction.Query(ctx, `{
-		result(func: type(Language)) {
-			<Language.code>
-		}
-	}`)
+	strQuery := ""
+
+	if searchQuery != nil {
+		strQuery = *searchQuery
+	}
+
+	response, err := models.SearchLanguages(
+		ctx,
+		transaction,
+		strQuery,
+		5,
+	)
 
 	if err != nil {
 		return nil, err
 	}
+
+	log.Printf("Search resultst %v\n", string(response.Json))
 
 	// Convert Dgraph's JSON shape into the intended JSON shape so
 	// we can unmarshal it properly.
 	responseJSON := strings.ReplaceAll(string(response.Json), "Language.", "")
 
 	type ResponseObj struct {
-		Result []generated.Language `json:"result"`
+		Result []models.Language `json:"result"`
 	}
 
 	var responseObj ResponseObj
@@ -91,7 +103,7 @@ func (r *queryResolver) Languages(ctx context.Context) ([]*generated.Language, e
 		return nil, err
 	}
 
-	var languages []*generated.Language
+	var languages []*models.Language
 
 	for i := 0; i < len(responseObj.Result); i++ {
 		languages = append(languages, &responseObj.Result[i])

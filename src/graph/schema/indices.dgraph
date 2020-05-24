@@ -13,3 +13,4 @@ Script.code: string @index(hash) @upsert .
 Tag.name: string @lang .
 
 Transliteration.hash: string @index(hash) @upsert .
+Transliteration.value: string @index(fulltext) @upsert .
