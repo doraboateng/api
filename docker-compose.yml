@@ -16,7 +16,7 @@ services:
     ports:
       - "8800:8800"
     volumes:
-      - .:/boateng-api
+      - .:/boateng-api:cached
     working_dir: /boateng-api
 
   # Dgraph Zero
@@ -35,7 +35,7 @@ services:
     ports:
       - "8819:6080"
     volumes:
-      - dgraph_volume:/dgraph
+      - dgraph_volume:/dgraph:cached
 
   # Dgraph Alpha
   alpha:
@@ -58,7 +58,7 @@ services:
       - 8817:8080
       - 8818:7080
     volumes:
-      - dgraph_volume:/dgraph
+      - dgraph_volume:/dgraph:cached
 
   # Dgraph Ratel
   ratel:
@@ -70,7 +70,7 @@ services:
     ports:
       - 8811:8000
     volumes:
-      - dgraph_volume:/dgraph
+      - dgraph_volume:/dgraph:cached
 
 volumes:
   dgraph_volume:
