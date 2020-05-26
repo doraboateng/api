@@ -55,6 +55,12 @@ type Script struct {
 	Names []*Transliteration `json:"names"`
 }
 
+type SearchResult struct {
+	Type       string `json:"type"`
+	Title      string `json:"title"`
+	ResourceID string `json:"resourceId"`
+}
+
 type Story struct {
 	Type     StoryType    `json:"type"`
 	Lines    []*StoryLine `json:"lines"`

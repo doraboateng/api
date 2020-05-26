@@ -1,6 +1,9 @@
 package utils
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // QueryLimit ...
 func QueryLimit(input int, max int) int {
@@ -18,4 +21,26 @@ func QueryLimit(input int, max int) int {
 // Sanitize ...
 func Sanitize(input string) string {
 	return strings.TrimSpace(input)
+}
+
+// ResponseToGraphQl ...
+func ResponseToGraphQl(response string) string {
+	graphql := string(response)
+	types := []string{
+		"Alphabet",
+		"Expression",
+		"Language",
+		"Reference",
+		"Script",
+		"Story",
+		"StoryLine",
+		"Tag",
+		"Transliteration",
+	}
+
+	for i := 0; i < len(types); i++ {
+		graphql = strings.ReplaceAll(graphql, fmt.Sprintf("%s.", types[i]), "")
+	}
+
+	return graphql
 }

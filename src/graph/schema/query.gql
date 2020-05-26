@@ -6,6 +6,14 @@ type Query {
 
   languages(query: String): [Language!]!
   language(code: String!): Language
+
+  search(query: String!): [SearchResult!]!
+}
+
+type SearchResult {
+  type: String!
+  title: String!
+  resourceId: String!
 }
 
 # type Mutation {

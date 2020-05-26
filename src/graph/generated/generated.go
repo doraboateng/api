@@ -84,6 +84,7 @@ type ComplexityRoot struct {
 		Expressions func(childComplexity int) int
 		Language    func(childComplexity int, code string) int
 		Languages   func(childComplexity int, query *string) int
+		Search      func(childComplexity int, query string) int
 	}
 
 	Reference struct {
@@ -94,6 +95,12 @@ type ComplexityRoot struct {
 	Script struct {
 		Code  func(childComplexity int) int
 		Names func(childComplexity int) int
+	}
+
+	SearchResult struct {
+		ResourceID func(childComplexity int) int
+		Title      func(childComplexity int) int
+		Type       func(childComplexity int) int
 	}
 
 	Story struct {
@@ -125,6 +132,7 @@ type QueryResolver interface {
 	Expressions(ctx context.Context) ([]*models.Expression, error)
 	Languages(ctx context.Context, query *string) ([]*models.Language, error)
 	Language(ctx context.Context, code string) (*models.Language, error)
+	Search(ctx context.Context, query string) ([]*models.SearchResult, error)
 }
 
 type executableSchema struct {
@@ -376,6 +384,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Languages(childComplexity, args["query"].(*string)), true
 
+	case "Query.search":
+		if e.complexity.Query.Search == nil {
+			break
+		}
+
+		args, err := ec.field_Query_search_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Search(childComplexity, args["query"].(string)), true
+
 	case "Reference.mla":
 		if e.complexity.Reference.Mla == nil {
 			break
@@ -403,6 +423,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Script.Names(childComplexity), true
+
+	case "SearchResult.resourceId":
+		if e.complexity.SearchResult.ResourceID == nil {
+			break
+		}
+
+		return e.complexity.SearchResult.ResourceID(childComplexity), true
+
+	case "SearchResult.title":
+		if e.complexity.SearchResult.Title == nil {
+			break
+		}
+
+		return e.complexity.SearchResult.Title(childComplexity), true
+
+	case "SearchResult.type":
+		if e.complexity.SearchResult.Type == nil {
+			break
+		}
+
+		return e.complexity.SearchResult.Type(childComplexity), true
 
 	case "Story.language":
 		if e.complexity.Story.Language == nil {
@@ -659,6 +700,14 @@ type Query {
 
   languages(query: String): [Language!]!
   language(code: String!): Language
+
+  search(query: String!): [SearchResult!]!
+}
+
+type SearchResult {
+  type: String!
+  title: String!
+  resourceId: String!
 }
 
 # type Mutation {
@@ -706,6 +755,20 @@ func (ec *executionContext) field_Query_languages_args(ctx context.Context, rawA
 	var arg0 *string
 	if tmp, ok := rawArgs["query"]; ok {
 		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["query"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_search_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["query"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1789,6 +1852,47 @@ func (ec *executionContext) _Query_language(ctx context.Context, field graphql.C
 	return ec.marshalOLanguage2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐLanguage(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_search_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Search(rctx, args["query"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.SearchResult)
+	fc.Result = res
+	return ec.marshalNSearchResult2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐSearchResultᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1986,6 +2090,108 @@ func (ec *executionContext) _Script_names(ctx context.Context, field graphql.Col
 	res := resTmp.([]*models.Transliteration)
 	fc.Result = res
 	return ec.marshalOTransliteration2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐTransliteration(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SearchResult_type(ctx context.Context, field graphql.CollectedField, obj *models.SearchResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "SearchResult",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SearchResult_title(ctx context.Context, field graphql.CollectedField, obj *models.SearchResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "SearchResult",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Title, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SearchResult_resourceId(ctx context.Context, field graphql.CollectedField, obj *models.SearchResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "SearchResult",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ResourceID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Story_type(ctx context.Context, field graphql.CollectedField, obj *models.Story) (ret graphql.Marshaler) {
@@ -3624,6 +3830,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_language(ctx, field)
 				return res
 			})
+		case "search":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_search(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "__type":
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
@@ -3686,6 +3906,43 @@ func (ec *executionContext) _Script(ctx context.Context, sel ast.SelectionSet, o
 			}
 		case "names":
 			out.Values[i] = ec._Script_names(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var searchResultImplementors = []string{"SearchResult"}
+
+func (ec *executionContext) _SearchResult(ctx context.Context, sel ast.SelectionSet, obj *models.SearchResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, searchResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SearchResult")
+		case "type":
+			out.Values[i] = ec._SearchResult_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "title":
+			out.Values[i] = ec._SearchResult_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "resourceId":
+			out.Values[i] = ec._SearchResult_resourceId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4253,6 +4510,57 @@ func (ec *executionContext) unmarshalNReferenceType2githubᚗcomᚋkwcayᚋboate
 
 func (ec *executionContext) marshalNReferenceType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐReferenceType(ctx context.Context, sel ast.SelectionSet, v models.ReferenceType) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNSearchResult2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐSearchResult(ctx context.Context, sel ast.SelectionSet, v models.SearchResult) graphql.Marshaler {
+	return ec._SearchResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSearchResult2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐSearchResultᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.SearchResult) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSearchResult2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐSearchResult(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNSearchResult2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐSearchResult(ctx context.Context, sel ast.SelectionSet, v *models.SearchResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._SearchResult(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNStory2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐStory(ctx context.Context, sel ast.SelectionSet, v models.Story) graphql.Marshaler {
