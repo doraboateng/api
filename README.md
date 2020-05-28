@@ -16,7 +16,7 @@
 - [Reporting Bugs](#reporting-bugs)
 - [Reporting Security Issues](#reporting-security-issues)
 - [Contributing](https://github.com/kwcay/boateng-graph-service/blob/stable/docs/contributing.md)
-- [Deploying](https://github.com/kwcay/boateng-api/blob/stable/docs/deploying.md)
+- [Releasing](https://github.com/kwcay/boateng-api/blob/stable/docs/releasing.md)
 - [License](#license)
 
 </details>
@@ -164,6 +164,10 @@ docker-compose up --detach --force-recreate
 # Reporting Security Issues
 
 >TODO
+
+# Releasing
+
+See [releasing notes](https://github.com/kwcay/boateng-api/blob/stable/docs/releasing.md).
 
 # License
 
