@@ -1,4 +1,4 @@
-# Deploying
+# Releasing
 
 1. Create a release on [Github](https://github.com/kwcay/boateng-api/releases/new).
     - Use [semantic versioning](https://semver.org).
