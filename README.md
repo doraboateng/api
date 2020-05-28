@@ -16,7 +16,7 @@
 - [Reporting Bugs](#reporting-bugs)
 - [Reporting Security Issues](#reporting-security-issues)
 - [Contributing](https://github.com/kwcay/boateng-graph-service/blob/stable/docs/contributing.md)
-- [Deploying](https://github.com/kwcay/boateng-graph-service/blob/stable/docs/deploying.md)
+- [Deploying](https://github.com/kwcay/boateng-api/blob/stable/docs/deploying.md)
 - [License](#license)
 
 </details>
