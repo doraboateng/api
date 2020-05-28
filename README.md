@@ -10,7 +10,9 @@
     - [Running the API locally](#running-the-api-locally)
     - [Published Ports](#published-ports)
     - [Viewing the log outputs from the services](#viewing-the-log-outputs-from-the-services)
-    - [Dgraph live loader](#dgraph-live-loader)
+    - [Creating a Dgraph backup](#creating-a-dgraph-backup)
+    - [Loading a Dgraph backup using the live loader](#loading-a-dgraph-backup-using-the-live-loader)
+    - [Resetting Dgraph](#resetting-dgraph)
 - [Reporting Bugs](#reporting-bugs)
 - [Reporting Security Issues](#reporting-security-issues)
 - [Contributing](https://github.com/kwcay/boateng-graph-service/blob/stable/docs/contributing.md)
@@ -57,7 +59,7 @@ In which case you can go ahead and type `y` and continue.
 To stop the API:
 
 ```shell
-docker-compose down
+docker-compose stop
 ```
 
 ## Published ports
@@ -97,7 +99,7 @@ docker-compose logs --follow api alpha zero
 
 For more details, see the [docs](https://docs.docker.com/compose/reference/logs) or run the command `docker-compose logs --help`
 
-## Export Dgraph data
+## Creating a Dgraph backup
 
 ```shell
 ./run shell alpha
@@ -117,7 +119,7 @@ exit
 docker cp boateng-api_alpha_1:/dgraph/doraboateng.2020-05-21.b406df.rdf.tar.gz tmp/
 ```
 
-## Dgraph live loader
+## Loading a Dgraph backup using the live loader
 
 ```shell
 # Copy backup file into Dgraph Alpha container.
@@ -133,11 +135,26 @@ mkdir -p /tmp/restore/$(date +'%Y-%m-%d') \
 
 # Load backup file.
 dgraph live \
-    --alpha 127.0.0.1:7080 \
+    --alpha 127.0.0.1:9080 \
     --files g01.rdf.gz \
     --schema g01.schema.gz \
     --use_compression \
     --zero zero:5080
+```
+
+## Resetting Dgraph
+
+The local Dgraph instance uses a Docker volume to persist data. In order to reset the graph, the volume must be removed along with the containers:
+
+```shell
+# Stop and remove containers.
+docker-compose down
+
+# Remove Dgraph volume.
+docker volume rm boateng-api_dgraph_volume
+
+# Rebuild containers.
+docker-compose up --detach --force-recreate
 ```
 
 # Reporting Bugs

@@ -10,8 +10,13 @@ import (
 func GetCorsOptions() cors.Options {
 	allowedOrigins := []string{"https://www.doraboateng.com"}
 
-	if os.Getenv("APP_ENV") == "local" {
-		allowedOrigins = []string{"http://localhost:*", "http://127.0.0.1:*", "http://0.0.0.0:*"}
+	if os.Getenv("BOATENG_ENV") == "local" {
+		allowedOrigins = []string{
+			"http://localhost:*",
+			"http://0.0.0.0:*",
+			"http://127.0.0.1:*",
+			"http://172.21.0.0/24:*",
+		}
 	}
 
 	return cors.Options{

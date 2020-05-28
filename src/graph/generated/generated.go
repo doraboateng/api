@@ -12,6 +12,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
+	"github.com/kwcay/boateng-api/src/graph/models"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -82,7 +83,8 @@ type ComplexityRoot struct {
 		Alphabets   func(childComplexity int) int
 		Expressions func(childComplexity int) int
 		Language    func(childComplexity int, code string) int
-		Languages   func(childComplexity int) int
+		Languages   func(childComplexity int, query *string) int
+		Search      func(childComplexity int, query string) int
 	}
 
 	Reference struct {
@@ -93,6 +95,12 @@ type ComplexityRoot struct {
 	Script struct {
 		Code  func(childComplexity int) int
 		Names func(childComplexity int) int
+	}
+
+	SearchResult struct {
+		ResourceID func(childComplexity int) int
+		Title      func(childComplexity int) int
+		Type       func(childComplexity int) int
 	}
 
 	Story struct {
@@ -112,18 +120,19 @@ type ComplexityRoot struct {
 	}
 
 	Transliteration struct {
-		Hash                      func(childComplexity int) int
-		TransliterationLangCode   func(childComplexity int) int
-		TransliterationScriptCode func(childComplexity int) int
-		Value                     func(childComplexity int) int
+		Hash       func(childComplexity int) int
+		LangCode   func(childComplexity int) int
+		ScriptCode func(childComplexity int) int
+		Value      func(childComplexity int) int
 	}
 }
 
 type QueryResolver interface {
-	Alphabets(ctx context.Context) ([]*Alphabet, error)
-	Expressions(ctx context.Context) ([]*Expression, error)
-	Languages(ctx context.Context) ([]*Language, error)
-	Language(ctx context.Context, code string) (*Language, error)
+	Alphabets(ctx context.Context) ([]*models.Alphabet, error)
+	Expressions(ctx context.Context) ([]*models.Expression, error)
+	Languages(ctx context.Context, query *string) ([]*models.Language, error)
+	Language(ctx context.Context, code string) (*models.Language, error)
+	Search(ctx context.Context, query string) ([]*models.SearchResult, error)
 }
 
 type executableSchema struct {
@@ -368,7 +377,24 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Languages(childComplexity), true
+		args, err := ec.field_Query_languages_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Languages(childComplexity, args["query"].(*string)), true
+
+	case "Query.search":
+		if e.complexity.Query.Search == nil {
+			break
+		}
+
+		args, err := ec.field_Query_search_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Search(childComplexity, args["query"].(string)), true
 
 	case "Reference.mla":
 		if e.complexity.Reference.Mla == nil {
@@ -397,6 +423,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Script.Names(childComplexity), true
+
+	case "SearchResult.resourceId":
+		if e.complexity.SearchResult.ResourceID == nil {
+			break
+		}
+
+		return e.complexity.SearchResult.ResourceID(childComplexity), true
+
+	case "SearchResult.title":
+		if e.complexity.SearchResult.Title == nil {
+			break
+		}
+
+		return e.complexity.SearchResult.Title(childComplexity), true
+
+	case "SearchResult.type":
+		if e.complexity.SearchResult.Type == nil {
+			break
+		}
+
+		return e.complexity.SearchResult.Type(childComplexity), true
 
 	case "Story.language":
 		if e.complexity.Story.Language == nil {
@@ -454,19 +501,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Transliteration.Hash(childComplexity), true
 
-	case "Transliteration.transliterationLangCode":
-		if e.complexity.Transliteration.TransliterationLangCode == nil {
+	case "Transliteration.langCode":
+		if e.complexity.Transliteration.LangCode == nil {
 			break
 		}
 
-		return e.complexity.Transliteration.TransliterationLangCode(childComplexity), true
+		return e.complexity.Transliteration.LangCode(childComplexity), true
 
-	case "Transliteration.transliterationScriptCode":
-		if e.complexity.Transliteration.TransliterationScriptCode == nil {
+	case "Transliteration.scriptCode":
+		if e.complexity.Transliteration.ScriptCode == nil {
 			break
 		}
 
-		return e.complexity.Transliteration.TransliterationScriptCode(childComplexity), true
+		return e.complexity.Transliteration.ScriptCode(childComplexity), true
 
 	case "Transliteration.value":
 		if e.complexity.Transliteration.Value == nil {
@@ -641,8 +688,8 @@ type Tag {
 type Transliteration {
   hash: String
   value: String!
-  transliterationLangCode: String
-  transliterationScriptCode: String
+  langCode: String
+  scriptCode: String
 }
 `, BuiltIn: false},
 	&ast.Source{Name: "src/graph/schema/query.gql", Input: `
@@ -651,8 +698,16 @@ type Query {
 
   expressions: [Expression!]!
 
-  languages: [Language!]!
+  languages(query: String): [Language!]!
   language(code: String!): Language
+
+  search(query: String!): [SearchResult!]!
+}
+
+type SearchResult {
+  type: String!
+  title: String!
+  resourceId: String!
 }
 
 # type Mutation {
@@ -694,6 +749,34 @@ func (ec *executionContext) field_Query_language_args(ctx context.Context, rawAr
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_languages_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["query"]; ok {
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["query"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_search_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["query"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["query"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field___Type_enumValues_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -730,7 +813,7 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Alphabet_code(ctx context.Context, field graphql.CollectedField, obj *Alphabet) (ret graphql.Marshaler) {
+func (ec *executionContext) _Alphabet_code(ctx context.Context, field graphql.CollectedField, obj *models.Alphabet) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -764,7 +847,7 @@ func (ec *executionContext) _Alphabet_code(ctx context.Context, field graphql.Co
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Alphabet_name(ctx context.Context, field graphql.CollectedField, obj *Alphabet) (ret graphql.Marshaler) {
+func (ec *executionContext) _Alphabet_name(ctx context.Context, field graphql.CollectedField, obj *models.Alphabet) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -798,7 +881,7 @@ func (ec *executionContext) _Alphabet_name(ctx context.Context, field graphql.Co
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Alphabet_script(ctx context.Context, field graphql.CollectedField, obj *Alphabet) (ret graphql.Marshaler) {
+func (ec *executionContext) _Alphabet_script(ctx context.Context, field graphql.CollectedField, obj *models.Alphabet) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -824,12 +907,12 @@ func (ec *executionContext) _Alphabet_script(ctx context.Context, field graphql.
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*Script)
+	res := resTmp.(*models.Script)
 	fc.Result = res
-	return ec.marshalOScript2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐScript(ctx, field.Selections, res)
+	return ec.marshalOScript2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐScript(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Alphabet_characters(ctx context.Context, field graphql.CollectedField, obj *Alphabet) (ret graphql.Marshaler) {
+func (ec *executionContext) _Alphabet_characters(ctx context.Context, field graphql.CollectedField, obj *models.Alphabet) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -860,7 +943,7 @@ func (ec *executionContext) _Alphabet_characters(ctx context.Context, field grap
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Alphabet_languages(ctx context.Context, field graphql.CollectedField, obj *Alphabet) (ret graphql.Marshaler) {
+func (ec *executionContext) _Alphabet_languages(ctx context.Context, field graphql.CollectedField, obj *models.Alphabet) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -886,12 +969,12 @@ func (ec *executionContext) _Alphabet_languages(ctx context.Context, field graph
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*Language)
+	res := resTmp.([]*models.Language)
 	fc.Result = res
-	return ec.marshalOLanguage2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐLanguage(ctx, field.Selections, res)
+	return ec.marshalOLanguage2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐLanguage(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Alphabet_references(ctx context.Context, field graphql.CollectedField, obj *Alphabet) (ret graphql.Marshaler) {
+func (ec *executionContext) _Alphabet_references(ctx context.Context, field graphql.CollectedField, obj *models.Alphabet) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -917,12 +1000,12 @@ func (ec *executionContext) _Alphabet_references(ctx context.Context, field grap
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*Reference)
+	res := resTmp.([]*models.Reference)
 	fc.Result = res
-	return ec.marshalOReference2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐReference(ctx, field.Selections, res)
+	return ec.marshalOReference2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐReference(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Expression_uuid(ctx context.Context, field graphql.CollectedField, obj *Expression) (ret graphql.Marshaler) {
+func (ec *executionContext) _Expression_uuid(ctx context.Context, field graphql.CollectedField, obj *models.Expression) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -956,7 +1039,7 @@ func (ec *executionContext) _Expression_uuid(ctx context.Context, field graphql.
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Expression_type(ctx context.Context, field graphql.CollectedField, obj *Expression) (ret graphql.Marshaler) {
+func (ec *executionContext) _Expression_type(ctx context.Context, field graphql.CollectedField, obj *models.Expression) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -985,12 +1068,12 @@ func (ec *executionContext) _Expression_type(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(ExpressionType)
+	res := resTmp.(models.ExpressionType)
 	fc.Result = res
-	return ec.marshalNExpressionType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐExpressionType(ctx, field.Selections, res)
+	return ec.marshalNExpressionType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐExpressionType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Expression_titles(ctx context.Context, field graphql.CollectedField, obj *Expression) (ret graphql.Marshaler) {
+func (ec *executionContext) _Expression_titles(ctx context.Context, field graphql.CollectedField, obj *models.Expression) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1019,12 +1102,12 @@ func (ec *executionContext) _Expression_titles(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*Transliteration)
+	res := resTmp.([]*models.Transliteration)
 	fc.Result = res
-	return ec.marshalNTransliteration2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐTransliterationᚄ(ctx, field.Selections, res)
+	return ec.marshalNTransliteration2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐTransliterationᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Expression_languages(ctx context.Context, field graphql.CollectedField, obj *Expression) (ret graphql.Marshaler) {
+func (ec *executionContext) _Expression_languages(ctx context.Context, field graphql.CollectedField, obj *models.Expression) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1053,12 +1136,12 @@ func (ec *executionContext) _Expression_languages(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*Language)
+	res := resTmp.([]*models.Language)
 	fc.Result = res
-	return ec.marshalNLanguage2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐLanguageᚄ(ctx, field.Selections, res)
+	return ec.marshalNLanguage2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐLanguageᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Expression_partOfSpeech(ctx context.Context, field graphql.CollectedField, obj *Expression) (ret graphql.Marshaler) {
+func (ec *executionContext) _Expression_partOfSpeech(ctx context.Context, field graphql.CollectedField, obj *models.Expression) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1084,12 +1167,12 @@ func (ec *executionContext) _Expression_partOfSpeech(ctx context.Context, field 
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*PartOfSpeech)
+	res := resTmp.(*models.PartOfSpeech)
 	fc.Result = res
-	return ec.marshalOPartOfSpeech2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐPartOfSpeech(ctx, field.Selections, res)
+	return ec.marshalOPartOfSpeech2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐPartOfSpeech(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Expression_nounType(ctx context.Context, field graphql.CollectedField, obj *Expression) (ret graphql.Marshaler) {
+func (ec *executionContext) _Expression_nounType(ctx context.Context, field graphql.CollectedField, obj *models.Expression) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1115,12 +1198,12 @@ func (ec *executionContext) _Expression_nounType(ctx context.Context, field grap
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*NounType)
+	res := resTmp.(*models.NounType)
 	fc.Result = res
-	return ec.marshalONounType2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐNounType(ctx, field.Selections, res)
+	return ec.marshalONounType2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐNounType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Expression_lexeme(ctx context.Context, field graphql.CollectedField, obj *Expression) (ret graphql.Marshaler) {
+func (ec *executionContext) _Expression_lexeme(ctx context.Context, field graphql.CollectedField, obj *models.Expression) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1146,12 +1229,12 @@ func (ec *executionContext) _Expression_lexeme(ctx context.Context, field graphq
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*Expression)
+	res := resTmp.(*models.Expression)
 	fc.Result = res
-	return ec.marshalOExpression2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐExpression(ctx, field.Selections, res)
+	return ec.marshalOExpression2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐExpression(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Expression_literalTranslation(ctx context.Context, field graphql.CollectedField, obj *Expression) (ret graphql.Marshaler) {
+func (ec *executionContext) _Expression_literalTranslation(ctx context.Context, field graphql.CollectedField, obj *models.Expression) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1182,7 +1265,7 @@ func (ec *executionContext) _Expression_literalTranslation(ctx context.Context, 
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Expression_practicalTranslation(ctx context.Context, field graphql.CollectedField, obj *Expression) (ret graphql.Marshaler) {
+func (ec *executionContext) _Expression_practicalTranslation(ctx context.Context, field graphql.CollectedField, obj *models.Expression) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1213,7 +1296,7 @@ func (ec *executionContext) _Expression_practicalTranslation(ctx context.Context
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Expression_meaning(ctx context.Context, field graphql.CollectedField, obj *Expression) (ret graphql.Marshaler) {
+func (ec *executionContext) _Expression_meaning(ctx context.Context, field graphql.CollectedField, obj *models.Expression) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1244,7 +1327,7 @@ func (ec *executionContext) _Expression_meaning(ctx context.Context, field graph
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Expression_tags(ctx context.Context, field graphql.CollectedField, obj *Expression) (ret graphql.Marshaler) {
+func (ec *executionContext) _Expression_tags(ctx context.Context, field graphql.CollectedField, obj *models.Expression) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1270,12 +1353,12 @@ func (ec *executionContext) _Expression_tags(ctx context.Context, field graphql.
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*Tag)
+	res := resTmp.([]*models.Tag)
 	fc.Result = res
-	return ec.marshalOTag2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐTag(ctx, field.Selections, res)
+	return ec.marshalOTag2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐTag(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Expression_relatedExpressions(ctx context.Context, field graphql.CollectedField, obj *Expression) (ret graphql.Marshaler) {
+func (ec *executionContext) _Expression_relatedExpressions(ctx context.Context, field graphql.CollectedField, obj *models.Expression) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1301,12 +1384,12 @@ func (ec *executionContext) _Expression_relatedExpressions(ctx context.Context, 
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*Expression)
+	res := resTmp.([]*models.Expression)
 	fc.Result = res
-	return ec.marshalOExpression2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐExpression(ctx, field.Selections, res)
+	return ec.marshalOExpression2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐExpression(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Expression_references(ctx context.Context, field graphql.CollectedField, obj *Expression) (ret graphql.Marshaler) {
+func (ec *executionContext) _Expression_references(ctx context.Context, field graphql.CollectedField, obj *models.Expression) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1332,12 +1415,12 @@ func (ec *executionContext) _Expression_references(ctx context.Context, field gr
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*Reference)
+	res := resTmp.([]*models.Reference)
 	fc.Result = res
-	return ec.marshalOReference2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐReference(ctx, field.Selections, res)
+	return ec.marshalOReference2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐReference(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Language_code(ctx context.Context, field graphql.CollectedField, obj *Language) (ret graphql.Marshaler) {
+func (ec *executionContext) _Language_code(ctx context.Context, field graphql.CollectedField, obj *models.Language) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1371,7 +1454,7 @@ func (ec *executionContext) _Language_code(ctx context.Context, field graphql.Co
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Language_names(ctx context.Context, field graphql.CollectedField, obj *Language) (ret graphql.Marshaler) {
+func (ec *executionContext) _Language_names(ctx context.Context, field graphql.CollectedField, obj *models.Language) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1400,12 +1483,12 @@ func (ec *executionContext) _Language_names(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*Transliteration)
+	res := resTmp.([]*models.Transliteration)
 	fc.Result = res
-	return ec.marshalNTransliteration2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐTransliterationᚄ(ctx, field.Selections, res)
+	return ec.marshalNTransliteration2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐTransliterationᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Language_parent(ctx context.Context, field graphql.CollectedField, obj *Language) (ret graphql.Marshaler) {
+func (ec *executionContext) _Language_parent(ctx context.Context, field graphql.CollectedField, obj *models.Language) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1431,12 +1514,12 @@ func (ec *executionContext) _Language_parent(ctx context.Context, field graphql.
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*Language)
+	res := resTmp.(*models.Language)
 	fc.Result = res
-	return ec.marshalOLanguage2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐLanguage(ctx, field.Selections, res)
+	return ec.marshalOLanguage2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐLanguage(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Language_lexifier(ctx context.Context, field graphql.CollectedField, obj *Language) (ret graphql.Marshaler) {
+func (ec *executionContext) _Language_lexifier(ctx context.Context, field graphql.CollectedField, obj *models.Language) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1462,12 +1545,12 @@ func (ec *executionContext) _Language_lexifier(ctx context.Context, field graphq
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*Language)
+	res := resTmp.(*models.Language)
 	fc.Result = res
-	return ec.marshalOLanguage2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐLanguage(ctx, field.Selections, res)
+	return ec.marshalOLanguage2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐLanguage(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Language_relatedLanguages(ctx context.Context, field graphql.CollectedField, obj *Language) (ret graphql.Marshaler) {
+func (ec *executionContext) _Language_relatedLanguages(ctx context.Context, field graphql.CollectedField, obj *models.Language) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1493,12 +1576,12 @@ func (ec *executionContext) _Language_relatedLanguages(ctx context.Context, fiel
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*Language)
+	res := resTmp.([]*models.Language)
 	fc.Result = res
-	return ec.marshalOLanguage2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐLanguage(ctx, field.Selections, res)
+	return ec.marshalOLanguage2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐLanguage(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Language_glottologId(ctx context.Context, field graphql.CollectedField, obj *Language) (ret graphql.Marshaler) {
+func (ec *executionContext) _Language_glottologId(ctx context.Context, field graphql.CollectedField, obj *models.Language) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1529,7 +1612,7 @@ func (ec *executionContext) _Language_glottologId(ctx context.Context, field gra
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Language_alphabets(ctx context.Context, field graphql.CollectedField, obj *Language) (ret graphql.Marshaler) {
+func (ec *executionContext) _Language_alphabets(ctx context.Context, field graphql.CollectedField, obj *models.Language) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1555,12 +1638,12 @@ func (ec *executionContext) _Language_alphabets(ctx context.Context, field graph
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*Alphabet)
+	res := resTmp.([]*models.Alphabet)
 	fc.Result = res
-	return ec.marshalOAlphabet2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐAlphabet(ctx, field.Selections, res)
+	return ec.marshalOAlphabet2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐAlphabet(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Language_isFamily(ctx context.Context, field graphql.CollectedField, obj *Language) (ret graphql.Marshaler) {
+func (ec *executionContext) _Language_isFamily(ctx context.Context, field graphql.CollectedField, obj *models.Language) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1591,7 +1674,7 @@ func (ec *executionContext) _Language_isFamily(ctx context.Context, field graphq
 	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Language_references(ctx context.Context, field graphql.CollectedField, obj *Language) (ret graphql.Marshaler) {
+func (ec *executionContext) _Language_references(ctx context.Context, field graphql.CollectedField, obj *models.Language) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1617,9 +1700,9 @@ func (ec *executionContext) _Language_references(ctx context.Context, field grap
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*Reference)
+	res := resTmp.([]*models.Reference)
 	fc.Result = res
-	return ec.marshalOReference2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐReference(ctx, field.Selections, res)
+	return ec.marshalOReference2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐReference(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_alphabets(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1651,9 +1734,9 @@ func (ec *executionContext) _Query_alphabets(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*Alphabet)
+	res := resTmp.([]*models.Alphabet)
 	fc.Result = res
-	return ec.marshalNAlphabet2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐAlphabetᚄ(ctx, field.Selections, res)
+	return ec.marshalNAlphabet2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐAlphabetᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_expressions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1685,9 +1768,9 @@ func (ec *executionContext) _Query_expressions(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*Expression)
+	res := resTmp.([]*models.Expression)
 	fc.Result = res
-	return ec.marshalNExpression2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐExpressionᚄ(ctx, field.Selections, res)
+	return ec.marshalNExpression2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐExpressionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_languages(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1705,9 +1788,16 @@ func (ec *executionContext) _Query_languages(ctx context.Context, field graphql.
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_languages_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Languages(rctx)
+		return ec.resolvers.Query().Languages(rctx, args["query"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1719,9 +1809,9 @@ func (ec *executionContext) _Query_languages(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*Language)
+	res := resTmp.([]*models.Language)
 	fc.Result = res
-	return ec.marshalNLanguage2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐLanguageᚄ(ctx, field.Selections, res)
+	return ec.marshalNLanguage2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐLanguageᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_language(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1757,9 +1847,50 @@ func (ec *executionContext) _Query_language(ctx context.Context, field graphql.C
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*Language)
+	res := resTmp.(*models.Language)
 	fc.Result = res
-	return ec.marshalOLanguage2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐLanguage(ctx, field.Selections, res)
+	return ec.marshalOLanguage2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐLanguage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_search_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Search(rctx, args["query"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.SearchResult)
+	fc.Result = res
+	return ec.marshalNSearchResult2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐSearchResultᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1831,7 +1962,7 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Reference_type(ctx context.Context, field graphql.CollectedField, obj *Reference) (ret graphql.Marshaler) {
+func (ec *executionContext) _Reference_type(ctx context.Context, field graphql.CollectedField, obj *models.Reference) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1860,12 +1991,12 @@ func (ec *executionContext) _Reference_type(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(ReferenceType)
+	res := resTmp.(models.ReferenceType)
 	fc.Result = res
-	return ec.marshalNReferenceType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐReferenceType(ctx, field.Selections, res)
+	return ec.marshalNReferenceType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐReferenceType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Reference_mla(ctx context.Context, field graphql.CollectedField, obj *Reference) (ret graphql.Marshaler) {
+func (ec *executionContext) _Reference_mla(ctx context.Context, field graphql.CollectedField, obj *models.Reference) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1896,7 +2027,7 @@ func (ec *executionContext) _Reference_mla(ctx context.Context, field graphql.Co
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Script_code(ctx context.Context, field graphql.CollectedField, obj *Script) (ret graphql.Marshaler) {
+func (ec *executionContext) _Script_code(ctx context.Context, field graphql.CollectedField, obj *models.Script) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1930,7 +2061,7 @@ func (ec *executionContext) _Script_code(ctx context.Context, field graphql.Coll
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Script_names(ctx context.Context, field graphql.CollectedField, obj *Script) (ret graphql.Marshaler) {
+func (ec *executionContext) _Script_names(ctx context.Context, field graphql.CollectedField, obj *models.Script) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1956,12 +2087,114 @@ func (ec *executionContext) _Script_names(ctx context.Context, field graphql.Col
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*Transliteration)
+	res := resTmp.([]*models.Transliteration)
 	fc.Result = res
-	return ec.marshalOTransliteration2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐTransliteration(ctx, field.Selections, res)
+	return ec.marshalOTransliteration2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐTransliteration(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Story_type(ctx context.Context, field graphql.CollectedField, obj *Story) (ret graphql.Marshaler) {
+func (ec *executionContext) _SearchResult_type(ctx context.Context, field graphql.CollectedField, obj *models.SearchResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "SearchResult",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SearchResult_title(ctx context.Context, field graphql.CollectedField, obj *models.SearchResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "SearchResult",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Title, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SearchResult_resourceId(ctx context.Context, field graphql.CollectedField, obj *models.SearchResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "SearchResult",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ResourceID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Story_type(ctx context.Context, field graphql.CollectedField, obj *models.Story) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1990,12 +2223,12 @@ func (ec *executionContext) _Story_type(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.(StoryType)
+	res := resTmp.(models.StoryType)
 	fc.Result = res
-	return ec.marshalNStoryType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐStoryType(ctx, field.Selections, res)
+	return ec.marshalNStoryType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐStoryType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Story_lines(ctx context.Context, field graphql.CollectedField, obj *Story) (ret graphql.Marshaler) {
+func (ec *executionContext) _Story_lines(ctx context.Context, field graphql.CollectedField, obj *models.Story) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2024,12 +2257,12 @@ func (ec *executionContext) _Story_lines(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*StoryLine)
+	res := resTmp.([]*models.StoryLine)
 	fc.Result = res
-	return ec.marshalNStoryLine2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐStoryLine(ctx, field.Selections, res)
+	return ec.marshalNStoryLine2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐStoryLine(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Story_language(ctx context.Context, field graphql.CollectedField, obj *Story) (ret graphql.Marshaler) {
+func (ec *executionContext) _Story_language(ctx context.Context, field graphql.CollectedField, obj *models.Story) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2055,12 +2288,12 @@ func (ec *executionContext) _Story_language(ctx context.Context, field graphql.C
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*Language)
+	res := resTmp.(*models.Language)
 	fc.Result = res
-	return ec.marshalOLanguage2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐLanguage(ctx, field.Selections, res)
+	return ec.marshalOLanguage2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐLanguage(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Story_script(ctx context.Context, field graphql.CollectedField, obj *Story) (ret graphql.Marshaler) {
+func (ec *executionContext) _Story_script(ctx context.Context, field graphql.CollectedField, obj *models.Story) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2086,12 +2319,12 @@ func (ec *executionContext) _Story_script(ctx context.Context, field graphql.Col
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*Script)
+	res := resTmp.(*models.Script)
 	fc.Result = res
-	return ec.marshalOScript2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐScript(ctx, field.Selections, res)
+	return ec.marshalOScript2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐScript(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _StoryLine_story(ctx context.Context, field graphql.CollectedField, obj *StoryLine) (ret graphql.Marshaler) {
+func (ec *executionContext) _StoryLine_story(ctx context.Context, field graphql.CollectedField, obj *models.StoryLine) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2120,12 +2353,12 @@ func (ec *executionContext) _StoryLine_story(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*Story)
+	res := resTmp.(*models.Story)
 	fc.Result = res
-	return ec.marshalNStory2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐStory(ctx, field.Selections, res)
+	return ec.marshalNStory2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐStory(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _StoryLine_content(ctx context.Context, field graphql.CollectedField, obj *StoryLine) (ret graphql.Marshaler) {
+func (ec *executionContext) _StoryLine_content(ctx context.Context, field graphql.CollectedField, obj *models.StoryLine) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2159,7 +2392,7 @@ func (ec *executionContext) _StoryLine_content(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Tag_name(ctx context.Context, field graphql.CollectedField, obj *Tag) (ret graphql.Marshaler) {
+func (ec *executionContext) _Tag_name(ctx context.Context, field graphql.CollectedField, obj *models.Tag) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2193,7 +2426,7 @@ func (ec *executionContext) _Tag_name(ctx context.Context, field graphql.Collect
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Transliteration_hash(ctx context.Context, field graphql.CollectedField, obj *Transliteration) (ret graphql.Marshaler) {
+func (ec *executionContext) _Transliteration_hash(ctx context.Context, field graphql.CollectedField, obj *models.Transliteration) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2224,7 +2457,7 @@ func (ec *executionContext) _Transliteration_hash(ctx context.Context, field gra
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Transliteration_value(ctx context.Context, field graphql.CollectedField, obj *Transliteration) (ret graphql.Marshaler) {
+func (ec *executionContext) _Transliteration_value(ctx context.Context, field graphql.CollectedField, obj *models.Transliteration) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2258,7 +2491,7 @@ func (ec *executionContext) _Transliteration_value(ctx context.Context, field gr
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Transliteration_transliterationLangCode(ctx context.Context, field graphql.CollectedField, obj *Transliteration) (ret graphql.Marshaler) {
+func (ec *executionContext) _Transliteration_langCode(ctx context.Context, field graphql.CollectedField, obj *models.Transliteration) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2275,7 +2508,7 @@ func (ec *executionContext) _Transliteration_transliterationLangCode(ctx context
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.TransliterationLangCode, nil
+		return obj.LangCode, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2289,7 +2522,7 @@ func (ec *executionContext) _Transliteration_transliterationLangCode(ctx context
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Transliteration_transliterationScriptCode(ctx context.Context, field graphql.CollectedField, obj *Transliteration) (ret graphql.Marshaler) {
+func (ec *executionContext) _Transliteration_scriptCode(ctx context.Context, field graphql.CollectedField, obj *models.Transliteration) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2306,7 +2539,7 @@ func (ec *executionContext) _Transliteration_transliterationScriptCode(ctx conte
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.TransliterationScriptCode, nil
+		return obj.ScriptCode, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3385,7 +3618,7 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 var alphabetImplementors = []string{"Alphabet"}
 
-func (ec *executionContext) _Alphabet(ctx context.Context, sel ast.SelectionSet, obj *Alphabet) graphql.Marshaler {
+func (ec *executionContext) _Alphabet(ctx context.Context, sel ast.SelectionSet, obj *models.Alphabet) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, alphabetImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3425,7 +3658,7 @@ func (ec *executionContext) _Alphabet(ctx context.Context, sel ast.SelectionSet,
 
 var expressionImplementors = []string{"Expression"}
 
-func (ec *executionContext) _Expression(ctx context.Context, sel ast.SelectionSet, obj *Expression) graphql.Marshaler {
+func (ec *executionContext) _Expression(ctx context.Context, sel ast.SelectionSet, obj *models.Expression) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, expressionImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3485,7 +3718,7 @@ func (ec *executionContext) _Expression(ctx context.Context, sel ast.SelectionSe
 
 var languageImplementors = []string{"Language"}
 
-func (ec *executionContext) _Language(ctx context.Context, sel ast.SelectionSet, obj *Language) graphql.Marshaler {
+func (ec *executionContext) _Language(ctx context.Context, sel ast.SelectionSet, obj *models.Language) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, languageImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3597,6 +3830,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_language(ctx, field)
 				return res
 			})
+		case "search":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_search(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "__type":
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
@@ -3614,7 +3861,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 
 var referenceImplementors = []string{"Reference"}
 
-func (ec *executionContext) _Reference(ctx context.Context, sel ast.SelectionSet, obj *Reference) graphql.Marshaler {
+func (ec *executionContext) _Reference(ctx context.Context, sel ast.SelectionSet, obj *models.Reference) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, referenceImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3643,7 +3890,7 @@ func (ec *executionContext) _Reference(ctx context.Context, sel ast.SelectionSet
 
 var scriptImplementors = []string{"Script"}
 
-func (ec *executionContext) _Script(ctx context.Context, sel ast.SelectionSet, obj *Script) graphql.Marshaler {
+func (ec *executionContext) _Script(ctx context.Context, sel ast.SelectionSet, obj *models.Script) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, scriptImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3670,9 +3917,46 @@ func (ec *executionContext) _Script(ctx context.Context, sel ast.SelectionSet, o
 	return out
 }
 
+var searchResultImplementors = []string{"SearchResult"}
+
+func (ec *executionContext) _SearchResult(ctx context.Context, sel ast.SelectionSet, obj *models.SearchResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, searchResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SearchResult")
+		case "type":
+			out.Values[i] = ec._SearchResult_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "title":
+			out.Values[i] = ec._SearchResult_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "resourceId":
+			out.Values[i] = ec._SearchResult_resourceId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var storyImplementors = []string{"Story"}
 
-func (ec *executionContext) _Story(ctx context.Context, sel ast.SelectionSet, obj *Story) graphql.Marshaler {
+func (ec *executionContext) _Story(ctx context.Context, sel ast.SelectionSet, obj *models.Story) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, storyImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3708,7 +3992,7 @@ func (ec *executionContext) _Story(ctx context.Context, sel ast.SelectionSet, ob
 
 var storyLineImplementors = []string{"StoryLine"}
 
-func (ec *executionContext) _StoryLine(ctx context.Context, sel ast.SelectionSet, obj *StoryLine) graphql.Marshaler {
+func (ec *executionContext) _StoryLine(ctx context.Context, sel ast.SelectionSet, obj *models.StoryLine) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, storyLineImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3740,7 +4024,7 @@ func (ec *executionContext) _StoryLine(ctx context.Context, sel ast.SelectionSet
 
 var tagImplementors = []string{"Tag"}
 
-func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj *Tag) graphql.Marshaler {
+func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj *models.Tag) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, tagImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3767,7 +4051,7 @@ func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj 
 
 var transliterationImplementors = []string{"Transliteration"}
 
-func (ec *executionContext) _Transliteration(ctx context.Context, sel ast.SelectionSet, obj *Transliteration) graphql.Marshaler {
+func (ec *executionContext) _Transliteration(ctx context.Context, sel ast.SelectionSet, obj *models.Transliteration) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, transliterationImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3783,10 +4067,10 @@ func (ec *executionContext) _Transliteration(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "transliterationLangCode":
-			out.Values[i] = ec._Transliteration_transliterationLangCode(ctx, field, obj)
-		case "transliterationScriptCode":
-			out.Values[i] = ec._Transliteration_transliterationScriptCode(ctx, field, obj)
+		case "langCode":
+			out.Values[i] = ec._Transliteration_langCode(ctx, field, obj)
+		case "scriptCode":
+			out.Values[i] = ec._Transliteration_scriptCode(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4043,11 +4327,11 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNAlphabet2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐAlphabet(ctx context.Context, sel ast.SelectionSet, v Alphabet) graphql.Marshaler {
+func (ec *executionContext) marshalNAlphabet2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐAlphabet(ctx context.Context, sel ast.SelectionSet, v models.Alphabet) graphql.Marshaler {
 	return ec._Alphabet(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAlphabet2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐAlphabetᚄ(ctx context.Context, sel ast.SelectionSet, v []*Alphabet) graphql.Marshaler {
+func (ec *executionContext) marshalNAlphabet2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐAlphabetᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Alphabet) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4071,7 +4355,7 @@ func (ec *executionContext) marshalNAlphabet2ᚕᚖgithubᚗcomᚋkwcayᚋboaten
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNAlphabet2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐAlphabet(ctx, sel, v[i])
+			ret[i] = ec.marshalNAlphabet2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐAlphabet(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4084,7 +4368,7 @@ func (ec *executionContext) marshalNAlphabet2ᚕᚖgithubᚗcomᚋkwcayᚋboaten
 	return ret
 }
 
-func (ec *executionContext) marshalNAlphabet2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐAlphabet(ctx context.Context, sel ast.SelectionSet, v *Alphabet) graphql.Marshaler {
+func (ec *executionContext) marshalNAlphabet2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐAlphabet(ctx context.Context, sel ast.SelectionSet, v *models.Alphabet) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -4108,11 +4392,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNExpression2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐExpression(ctx context.Context, sel ast.SelectionSet, v Expression) graphql.Marshaler {
+func (ec *executionContext) marshalNExpression2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐExpression(ctx context.Context, sel ast.SelectionSet, v models.Expression) graphql.Marshaler {
 	return ec._Expression(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNExpression2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐExpressionᚄ(ctx context.Context, sel ast.SelectionSet, v []*Expression) graphql.Marshaler {
+func (ec *executionContext) marshalNExpression2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐExpressionᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Expression) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4136,7 +4420,7 @@ func (ec *executionContext) marshalNExpression2ᚕᚖgithubᚗcomᚋkwcayᚋboat
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNExpression2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐExpression(ctx, sel, v[i])
+			ret[i] = ec.marshalNExpression2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐExpression(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4149,7 +4433,7 @@ func (ec *executionContext) marshalNExpression2ᚕᚖgithubᚗcomᚋkwcayᚋboat
 	return ret
 }
 
-func (ec *executionContext) marshalNExpression2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐExpression(ctx context.Context, sel ast.SelectionSet, v *Expression) graphql.Marshaler {
+func (ec *executionContext) marshalNExpression2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐExpression(ctx context.Context, sel ast.SelectionSet, v *models.Expression) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -4159,20 +4443,20 @@ func (ec *executionContext) marshalNExpression2ᚖgithubᚗcomᚋkwcayᚋboateng
 	return ec._Expression(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNExpressionType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐExpressionType(ctx context.Context, v interface{}) (ExpressionType, error) {
-	var res ExpressionType
+func (ec *executionContext) unmarshalNExpressionType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐExpressionType(ctx context.Context, v interface{}) (models.ExpressionType, error) {
+	var res models.ExpressionType
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalNExpressionType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐExpressionType(ctx context.Context, sel ast.SelectionSet, v ExpressionType) graphql.Marshaler {
+func (ec *executionContext) marshalNExpressionType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐExpressionType(ctx context.Context, sel ast.SelectionSet, v models.ExpressionType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNLanguage2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐLanguage(ctx context.Context, sel ast.SelectionSet, v Language) graphql.Marshaler {
+func (ec *executionContext) marshalNLanguage2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐLanguage(ctx context.Context, sel ast.SelectionSet, v models.Language) graphql.Marshaler {
 	return ec._Language(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNLanguage2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐLanguageᚄ(ctx context.Context, sel ast.SelectionSet, v []*Language) graphql.Marshaler {
+func (ec *executionContext) marshalNLanguage2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐLanguageᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Language) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4196,7 +4480,7 @@ func (ec *executionContext) marshalNLanguage2ᚕᚖgithubᚗcomᚋkwcayᚋboaten
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNLanguage2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐLanguage(ctx, sel, v[i])
+			ret[i] = ec.marshalNLanguage2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐLanguage(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4209,7 +4493,7 @@ func (ec *executionContext) marshalNLanguage2ᚕᚖgithubᚗcomᚋkwcayᚋboaten
 	return ret
 }
 
-func (ec *executionContext) marshalNLanguage2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐLanguage(ctx context.Context, sel ast.SelectionSet, v *Language) graphql.Marshaler {
+func (ec *executionContext) marshalNLanguage2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐLanguage(ctx context.Context, sel ast.SelectionSet, v *models.Language) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -4219,30 +4503,20 @@ func (ec *executionContext) marshalNLanguage2ᚖgithubᚗcomᚋkwcayᚋboateng�
 	return ec._Language(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNReferenceType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐReferenceType(ctx context.Context, v interface{}) (ReferenceType, error) {
-	var res ReferenceType
+func (ec *executionContext) unmarshalNReferenceType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐReferenceType(ctx context.Context, v interface{}) (models.ReferenceType, error) {
+	var res models.ReferenceType
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalNReferenceType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐReferenceType(ctx context.Context, sel ast.SelectionSet, v ReferenceType) graphql.Marshaler {
+func (ec *executionContext) marshalNReferenceType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐReferenceType(ctx context.Context, sel ast.SelectionSet, v models.ReferenceType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNStory2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐStory(ctx context.Context, sel ast.SelectionSet, v Story) graphql.Marshaler {
-	return ec._Story(ctx, sel, &v)
+func (ec *executionContext) marshalNSearchResult2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐSearchResult(ctx context.Context, sel ast.SelectionSet, v models.SearchResult) graphql.Marshaler {
+	return ec._SearchResult(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNStory2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐStory(ctx context.Context, sel ast.SelectionSet, v *Story) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._Story(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNStoryLine2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐStoryLine(ctx context.Context, sel ast.SelectionSet, v []*StoryLine) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchResult2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐSearchResultᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.SearchResult) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4266,7 +4540,7 @@ func (ec *executionContext) marshalNStoryLine2ᚕᚖgithubᚗcomᚋkwcayᚋboate
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOStoryLine2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐStoryLine(ctx, sel, v[i])
+			ret[i] = ec.marshalNSearchResult2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐSearchResult(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4279,12 +4553,73 @@ func (ec *executionContext) marshalNStoryLine2ᚕᚖgithubᚗcomᚋkwcayᚋboate
 	return ret
 }
 
-func (ec *executionContext) unmarshalNStoryType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐStoryType(ctx context.Context, v interface{}) (StoryType, error) {
-	var res StoryType
+func (ec *executionContext) marshalNSearchResult2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐSearchResult(ctx context.Context, sel ast.SelectionSet, v *models.SearchResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._SearchResult(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNStory2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐStory(ctx context.Context, sel ast.SelectionSet, v models.Story) graphql.Marshaler {
+	return ec._Story(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNStory2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐStory(ctx context.Context, sel ast.SelectionSet, v *models.Story) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Story(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNStoryLine2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐStoryLine(ctx context.Context, sel ast.SelectionSet, v []*models.StoryLine) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOStoryLine2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐStoryLine(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) unmarshalNStoryType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐStoryType(ctx context.Context, v interface{}) (models.StoryType, error) {
+	var res models.StoryType
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalNStoryType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐStoryType(ctx context.Context, sel ast.SelectionSet, v StoryType) graphql.Marshaler {
+func (ec *executionContext) marshalNStoryType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐStoryType(ctx context.Context, sel ast.SelectionSet, v models.StoryType) graphql.Marshaler {
 	return v
 }
 
@@ -4302,11 +4637,11 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalNTransliteration2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐTransliteration(ctx context.Context, sel ast.SelectionSet, v Transliteration) graphql.Marshaler {
+func (ec *executionContext) marshalNTransliteration2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐTransliteration(ctx context.Context, sel ast.SelectionSet, v models.Transliteration) graphql.Marshaler {
 	return ec._Transliteration(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTransliteration2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐTransliterationᚄ(ctx context.Context, sel ast.SelectionSet, v []*Transliteration) graphql.Marshaler {
+func (ec *executionContext) marshalNTransliteration2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐTransliterationᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Transliteration) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4330,7 +4665,7 @@ func (ec *executionContext) marshalNTransliteration2ᚕᚖgithubᚗcomᚋkwcay�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNTransliteration2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐTransliteration(ctx, sel, v[i])
+			ret[i] = ec.marshalNTransliteration2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐTransliteration(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4343,7 +4678,7 @@ func (ec *executionContext) marshalNTransliteration2ᚕᚖgithubᚗcomᚋkwcay�
 	return ret
 }
 
-func (ec *executionContext) marshalNTransliteration2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐTransliteration(ctx context.Context, sel ast.SelectionSet, v *Transliteration) graphql.Marshaler {
+func (ec *executionContext) marshalNTransliteration2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐTransliteration(ctx context.Context, sel ast.SelectionSet, v *models.Transliteration) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -4579,11 +4914,11 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) marshalOAlphabet2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐAlphabet(ctx context.Context, sel ast.SelectionSet, v Alphabet) graphql.Marshaler {
+func (ec *executionContext) marshalOAlphabet2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐAlphabet(ctx context.Context, sel ast.SelectionSet, v models.Alphabet) graphql.Marshaler {
 	return ec._Alphabet(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOAlphabet2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐAlphabet(ctx context.Context, sel ast.SelectionSet, v []*Alphabet) graphql.Marshaler {
+func (ec *executionContext) marshalOAlphabet2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐAlphabet(ctx context.Context, sel ast.SelectionSet, v []*models.Alphabet) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -4610,7 +4945,7 @@ func (ec *executionContext) marshalOAlphabet2ᚕᚖgithubᚗcomᚋkwcayᚋboaten
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOAlphabet2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐAlphabet(ctx, sel, v[i])
+			ret[i] = ec.marshalOAlphabet2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐAlphabet(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4623,7 +4958,7 @@ func (ec *executionContext) marshalOAlphabet2ᚕᚖgithubᚗcomᚋkwcayᚋboaten
 	return ret
 }
 
-func (ec *executionContext) marshalOAlphabet2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐAlphabet(ctx context.Context, sel ast.SelectionSet, v *Alphabet) graphql.Marshaler {
+func (ec *executionContext) marshalOAlphabet2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐAlphabet(ctx context.Context, sel ast.SelectionSet, v *models.Alphabet) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -4653,11 +4988,11 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
 }
 
-func (ec *executionContext) marshalOExpression2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐExpression(ctx context.Context, sel ast.SelectionSet, v Expression) graphql.Marshaler {
+func (ec *executionContext) marshalOExpression2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐExpression(ctx context.Context, sel ast.SelectionSet, v models.Expression) graphql.Marshaler {
 	return ec._Expression(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOExpression2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐExpression(ctx context.Context, sel ast.SelectionSet, v []*Expression) graphql.Marshaler {
+func (ec *executionContext) marshalOExpression2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐExpression(ctx context.Context, sel ast.SelectionSet, v []*models.Expression) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -4684,7 +5019,7 @@ func (ec *executionContext) marshalOExpression2ᚕᚖgithubᚗcomᚋkwcayᚋboat
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOExpression2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐExpression(ctx, sel, v[i])
+			ret[i] = ec.marshalOExpression2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐExpression(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4697,18 +5032,18 @@ func (ec *executionContext) marshalOExpression2ᚕᚖgithubᚗcomᚋkwcayᚋboat
 	return ret
 }
 
-func (ec *executionContext) marshalOExpression2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐExpression(ctx context.Context, sel ast.SelectionSet, v *Expression) graphql.Marshaler {
+func (ec *executionContext) marshalOExpression2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐExpression(ctx context.Context, sel ast.SelectionSet, v *models.Expression) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Expression(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOLanguage2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐLanguage(ctx context.Context, sel ast.SelectionSet, v Language) graphql.Marshaler {
+func (ec *executionContext) marshalOLanguage2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐLanguage(ctx context.Context, sel ast.SelectionSet, v models.Language) graphql.Marshaler {
 	return ec._Language(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOLanguage2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐLanguage(ctx context.Context, sel ast.SelectionSet, v []*Language) graphql.Marshaler {
+func (ec *executionContext) marshalOLanguage2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐLanguage(ctx context.Context, sel ast.SelectionSet, v []*models.Language) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -4735,7 +5070,7 @@ func (ec *executionContext) marshalOLanguage2ᚕᚖgithubᚗcomᚋkwcayᚋboaten
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOLanguage2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐLanguage(ctx, sel, v[i])
+			ret[i] = ec.marshalOLanguage2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐLanguage(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4748,66 +5083,66 @@ func (ec *executionContext) marshalOLanguage2ᚕᚖgithubᚗcomᚋkwcayᚋboaten
 	return ret
 }
 
-func (ec *executionContext) marshalOLanguage2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐLanguage(ctx context.Context, sel ast.SelectionSet, v *Language) graphql.Marshaler {
+func (ec *executionContext) marshalOLanguage2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐLanguage(ctx context.Context, sel ast.SelectionSet, v *models.Language) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Language(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalONounType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐNounType(ctx context.Context, v interface{}) (NounType, error) {
-	var res NounType
+func (ec *executionContext) unmarshalONounType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐNounType(ctx context.Context, v interface{}) (models.NounType, error) {
+	var res models.NounType
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalONounType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐNounType(ctx context.Context, sel ast.SelectionSet, v NounType) graphql.Marshaler {
+func (ec *executionContext) marshalONounType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐNounType(ctx context.Context, sel ast.SelectionSet, v models.NounType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalONounType2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐNounType(ctx context.Context, v interface{}) (*NounType, error) {
+func (ec *executionContext) unmarshalONounType2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐNounType(ctx context.Context, v interface{}) (*models.NounType, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalONounType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐNounType(ctx, v)
+	res, err := ec.unmarshalONounType2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐNounType(ctx, v)
 	return &res, err
 }
 
-func (ec *executionContext) marshalONounType2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐNounType(ctx context.Context, sel ast.SelectionSet, v *NounType) graphql.Marshaler {
+func (ec *executionContext) marshalONounType2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐNounType(ctx context.Context, sel ast.SelectionSet, v *models.NounType) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) unmarshalOPartOfSpeech2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐPartOfSpeech(ctx context.Context, v interface{}) (PartOfSpeech, error) {
-	var res PartOfSpeech
+func (ec *executionContext) unmarshalOPartOfSpeech2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐPartOfSpeech(ctx context.Context, v interface{}) (models.PartOfSpeech, error) {
+	var res models.PartOfSpeech
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalOPartOfSpeech2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐPartOfSpeech(ctx context.Context, sel ast.SelectionSet, v PartOfSpeech) graphql.Marshaler {
+func (ec *executionContext) marshalOPartOfSpeech2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐPartOfSpeech(ctx context.Context, sel ast.SelectionSet, v models.PartOfSpeech) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalOPartOfSpeech2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐPartOfSpeech(ctx context.Context, v interface{}) (*PartOfSpeech, error) {
+func (ec *executionContext) unmarshalOPartOfSpeech2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐPartOfSpeech(ctx context.Context, v interface{}) (*models.PartOfSpeech, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalOPartOfSpeech2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐPartOfSpeech(ctx, v)
+	res, err := ec.unmarshalOPartOfSpeech2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐPartOfSpeech(ctx, v)
 	return &res, err
 }
 
-func (ec *executionContext) marshalOPartOfSpeech2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐPartOfSpeech(ctx context.Context, sel ast.SelectionSet, v *PartOfSpeech) graphql.Marshaler {
+func (ec *executionContext) marshalOPartOfSpeech2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐPartOfSpeech(ctx context.Context, sel ast.SelectionSet, v *models.PartOfSpeech) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) marshalOReference2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐReference(ctx context.Context, sel ast.SelectionSet, v Reference) graphql.Marshaler {
+func (ec *executionContext) marshalOReference2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐReference(ctx context.Context, sel ast.SelectionSet, v models.Reference) graphql.Marshaler {
 	return ec._Reference(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOReference2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐReference(ctx context.Context, sel ast.SelectionSet, v []*Reference) graphql.Marshaler {
+func (ec *executionContext) marshalOReference2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐReference(ctx context.Context, sel ast.SelectionSet, v []*models.Reference) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -4834,7 +5169,7 @@ func (ec *executionContext) marshalOReference2ᚕᚖgithubᚗcomᚋkwcayᚋboate
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOReference2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐReference(ctx, sel, v[i])
+			ret[i] = ec.marshalOReference2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐReference(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4847,29 +5182,29 @@ func (ec *executionContext) marshalOReference2ᚕᚖgithubᚗcomᚋkwcayᚋboate
 	return ret
 }
 
-func (ec *executionContext) marshalOReference2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐReference(ctx context.Context, sel ast.SelectionSet, v *Reference) graphql.Marshaler {
+func (ec *executionContext) marshalOReference2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐReference(ctx context.Context, sel ast.SelectionSet, v *models.Reference) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Reference(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOScript2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐScript(ctx context.Context, sel ast.SelectionSet, v Script) graphql.Marshaler {
+func (ec *executionContext) marshalOScript2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐScript(ctx context.Context, sel ast.SelectionSet, v models.Script) graphql.Marshaler {
 	return ec._Script(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOScript2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐScript(ctx context.Context, sel ast.SelectionSet, v *Script) graphql.Marshaler {
+func (ec *executionContext) marshalOScript2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐScript(ctx context.Context, sel ast.SelectionSet, v *models.Script) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Script(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOStoryLine2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐStoryLine(ctx context.Context, sel ast.SelectionSet, v StoryLine) graphql.Marshaler {
+func (ec *executionContext) marshalOStoryLine2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐStoryLine(ctx context.Context, sel ast.SelectionSet, v models.StoryLine) graphql.Marshaler {
 	return ec._StoryLine(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOStoryLine2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐStoryLine(ctx context.Context, sel ast.SelectionSet, v *StoryLine) graphql.Marshaler {
+func (ec *executionContext) marshalOStoryLine2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐStoryLine(ctx context.Context, sel ast.SelectionSet, v *models.StoryLine) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -4899,11 +5234,11 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	return ec.marshalOString2string(ctx, sel, *v)
 }
 
-func (ec *executionContext) marshalOTag2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐTag(ctx context.Context, sel ast.SelectionSet, v Tag) graphql.Marshaler {
+func (ec *executionContext) marshalOTag2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐTag(ctx context.Context, sel ast.SelectionSet, v models.Tag) graphql.Marshaler {
 	return ec._Tag(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOTag2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐTag(ctx context.Context, sel ast.SelectionSet, v []*Tag) graphql.Marshaler {
+func (ec *executionContext) marshalOTag2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐTag(ctx context.Context, sel ast.SelectionSet, v []*models.Tag) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -4930,7 +5265,7 @@ func (ec *executionContext) marshalOTag2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑa
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOTag2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐTag(ctx, sel, v[i])
+			ret[i] = ec.marshalOTag2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐTag(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4943,18 +5278,18 @@ func (ec *executionContext) marshalOTag2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑa
 	return ret
 }
 
-func (ec *executionContext) marshalOTag2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐTag(ctx context.Context, sel ast.SelectionSet, v *Tag) graphql.Marshaler {
+func (ec *executionContext) marshalOTag2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐTag(ctx context.Context, sel ast.SelectionSet, v *models.Tag) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Tag(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOTransliteration2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐTransliteration(ctx context.Context, sel ast.SelectionSet, v Transliteration) graphql.Marshaler {
+func (ec *executionContext) marshalOTransliteration2githubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐTransliteration(ctx context.Context, sel ast.SelectionSet, v models.Transliteration) graphql.Marshaler {
 	return ec._Transliteration(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOTransliteration2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐTransliteration(ctx context.Context, sel ast.SelectionSet, v []*Transliteration) graphql.Marshaler {
+func (ec *executionContext) marshalOTransliteration2ᚕᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐTransliteration(ctx context.Context, sel ast.SelectionSet, v []*models.Transliteration) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -4981,7 +5316,7 @@ func (ec *executionContext) marshalOTransliteration2ᚕᚖgithubᚗcomᚋkwcay�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOTransliteration2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐTransliteration(ctx, sel, v[i])
+			ret[i] = ec.marshalOTransliteration2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐTransliteration(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4994,7 +5329,7 @@ func (ec *executionContext) marshalOTransliteration2ᚕᚖgithubᚗcomᚋkwcay�
 	return ret
 }
 
-func (ec *executionContext) marshalOTransliteration2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋgeneratedᚐTransliteration(ctx context.Context, sel ast.SelectionSet, v *Transliteration) graphql.Marshaler {
+func (ec *executionContext) marshalOTransliteration2ᚖgithubᚗcomᚋkwcayᚋboatengᚑapiᚋsrcᚋgraphᚋmodelsᚐTransliteration(ctx context.Context, sel ast.SelectionSet, v *models.Transliteration) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

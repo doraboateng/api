@@ -4,8 +4,8 @@ exec:
   filename: src/graph/generated/generated.go
   package: generated
 model:
-  filename: src/graph/generated/models.go
-  package: generated
+  filename: src/graph/models/generated.go
+  package: models
 resolver:
   filename: src/graph/resolvers/resolver.go
   package: resolvers

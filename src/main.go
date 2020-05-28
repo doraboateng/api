@@ -7,6 +7,7 @@ import (
 
 	"github.com/kwcay/boateng-api/src/graph"
 	"github.com/kwcay/boateng-api/src/router"
+	"github.com/kwcay/boateng-api/src/utils"
 )
 
 // Build-time variables
@@ -14,6 +15,10 @@ var version string
 var gitHash string
 
 func main() {
+	// Bootstap API.
+	utils.SetupSentry(version)
+
+	// Setup router and serve API.
 	router := router.Create()
 	port := os.Getenv("BOATENG_API_PORT")
 

@@ -3,15 +3,15 @@ package resolvers
 import (
 	"context"
 
-	"github.com/kwcay/boateng-api/src/graph/generated"
+	"github.com/kwcay/boateng-api/src/graph/models"
 )
 
 type alphabetResolver struct{ *Resolver }
 
-func (r *queryResolver) Alphabet(ctx context.Context, code string) (*generated.Alphabet, error) {
+func (r *queryResolver) Alphabet(ctx context.Context, code string) (*models.Alphabet, error) {
 	panic("not implemented")
 }
 
-func (r *queryResolver) Alphabets(ctx context.Context) ([]*generated.Alphabet, error) {
+func (r *queryResolver) Alphabets(ctx context.Context) ([]*models.Alphabet, error) {
 	panic("not implemented")
 }
