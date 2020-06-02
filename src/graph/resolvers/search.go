@@ -30,5 +30,8 @@ func (r *queryResolver) Search(
 	languages, err := models.GetLanguageSearchResults(ctx, r.Dgraph, query)
 	results = mergeResults(results, languages, err)
 
+	expressions, err := models.GetExpressionSearchResults(ctx, r.Dgraph, "eng", query)
+	results = mergeResults(results, expressions, err)
+
 	return results, nil
 }

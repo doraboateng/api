@@ -37,7 +37,7 @@ func queryLanguages(
 		`query SearchLanguages($query: string) {
 			result(func: type(Language)) @cascade {
 			    <Language.code>
-			    <Language.names> @filter(alloftext(Transliteration.value, $query)) {
+			    <Language.names> @filter(anyoftext(Transliteration.value, $query)) {
 				    <Transliteration.value>
 			    }
 			}

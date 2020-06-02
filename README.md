@@ -133,7 +133,13 @@ mkdir -p /tmp/restore/$(date +'%Y-%m-%d') \
     && tar --extract --gzip --file rdf.tar.gz \
     && cp export/**/* .
 
-# Load backup file.
+# Load backup file (skip schema).
+dgraph live \
+    --alpha 127.0.0.1:9080 \
+    --files g01.rdf.gz \
+    --zero zero:5080
+
+# Load backup file + schema using compression
 dgraph live \
     --alpha 127.0.0.1:9080 \
     --files g01.rdf.gz \

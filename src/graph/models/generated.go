@@ -17,22 +17,6 @@ type Alphabet struct {
 	References []*Reference `json:"references"`
 }
 
-type Expression struct {
-	UUID                 string             `json:"uuid"`
-	Type                 ExpressionType     `json:"type"`
-	Titles               []*Transliteration `json:"titles"`
-	Languages            []*Language        `json:"languages"`
-	PartOfSpeech         *PartOfSpeech      `json:"partOfSpeech"`
-	NounType             *NounType          `json:"nounType"`
-	Lexeme               *Expression        `json:"lexeme"`
-	LiteralTranslation   *string            `json:"literalTranslation"`
-	PracticalTranslation *string            `json:"practicalTranslation"`
-	Meaning              *string            `json:"meaning"`
-	Tags                 []*Tag             `json:"tags"`
-	RelatedExpressions   []*Expression      `json:"relatedExpressions"`
-	References           []*Reference       `json:"references"`
-}
-
 type Language struct {
 	Code             string             `json:"code"`
 	Names            []*Transliteration `json:"names"`
