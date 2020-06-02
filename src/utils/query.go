@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -21,6 +22,13 @@ func QueryLimit(input int, max int) int {
 // Sanitize ...
 func Sanitize(input string) string {
 	return strings.TrimSpace(input)
+}
+
+var langCodeRegex = regexp.MustCompile(`^[a-z]{3}(-[a-z]{3})?$`)
+
+// ValidateLangCode ...
+func ValidateLangCode(code string) bool {
+	return langCodeRegex.MatchString(code)
 }
 
 // ResponseToGraphQl ...

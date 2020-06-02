@@ -2,9 +2,9 @@ Alphabet.code: string @index(hash) @upsert .
 Alphabet.name: string @lang .
 
 Expression.uuid: string @index(hash) @upsert .
-Expression.literalTranslation: string @lang .
-Expression.practicalTranslation: string @lang .
-Expression.meaning: string @lang .
+Expression.literalTranslation: string @index(fulltext) @lang .
+Expression.practicalTranslation: string @index(fulltext) @lang .
+Expression.meaning: string @index(fulltext) @lang .
 
 Language.code: string @index(hash) @upsert .
 
