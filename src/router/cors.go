@@ -8,7 +8,7 @@ import (
 
 // GetCorsOptions returns the CORS options for the API based on the environment.
 func GetCorsOptions() cors.Options {
-	allowedOrigins := []string{"https://www.doraboateng.com"}
+	allowedOrigins := []string{"https://doraboateng.com", "https://www.doraboateng.com"}
 
 	if os.Getenv("BOATENG_ENV") == "local" {
 		allowedOrigins = []string{
