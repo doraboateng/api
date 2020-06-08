@@ -20,7 +20,12 @@ func main() {
 
 	// Setup router and serve API.
 	router := router.Create()
-	port := os.Getenv("BOATENG_API_PORT")
+	port := os.Getenv("PORT")
+
+	if port == "" {
+		// Backwards compatibility...
+		port = os.Getenv("BOATENG_API_PORT")
+	}
 
 	if port == "" {
 		port = "80"
