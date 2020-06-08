@@ -2,6 +2,8 @@ steps:
   - name: "gcr.io/cloud-builders/docker"
     args: [
       "build",
+      "--build-arg", "BUILD_VERSION=$(git describe --abbrev=0 --tags)",
+      "--build-arg", "GIT_HASH=$COMMIT_SHA",
       "--tag", "gcr.io/doraboateng/api:$COMMIT_SHA",
       "--target", "prod",
       ".",
