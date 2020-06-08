@@ -1,0 +1,20 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args: [
+      "build",
+      "--tag", "gcr.io/doraboateng/api:$COMMIT_SHA",
+      "--target", "prod",
+      ".",
+    ]
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/doraboateng/api:$COMMIT_SHA"]
+  - name: "gcr.io/cloud-builders/gcloud"
+    args: [
+      "run", "deploy", "api",
+      "--allow-unauthenticated",
+      "--image", "gcr.io/doraboateng/api:$COMMIT_SHA",
+      "--platform", "managed",
+      "--region", "us-east1",
+    ]
+images:
+  - gcr.io/doraboateng/api

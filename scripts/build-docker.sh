@@ -6,8 +6,8 @@ set -e
 . scripts/utils.sh
 
 VERSION=$1
-DOCKER_REPO="doraboateng/api"
-USAGE="Usage: ./run [VERSION]"
+IMAGE_NAME="doraboateng/api"
+USAGE="Usage: ./run build-docker [VERSION]"
 
 if [ "$VERSION" = "" ]; then
     VERSION=$(git describe --abbrev=0 --tags)
@@ -20,8 +20,8 @@ then
     exit 0
 fi
 
-TAGGED_IMAGE="$DOCKER_REPO:$VERSION"
-LATEST_IMAGE="$DOCKER_REPO:latest"
+TAGGED_IMAGE="$IMAGE_NAME:$VERSION"
+LATEST_IMAGE="$IMAGE_NAME:latest"
 
 echo ""
 echo "Building \"$TAGGED_IMAGE\". Continue? (yes/[no])"
@@ -44,7 +44,7 @@ docker build \
     .
 
 echo ""
-echo "Update \"latest\" tag for \"$DOCKER_REPO\" (\"$LATEST_IMAGE\")? (yes/[no])"
+echo "Update \"latest\" tag for \"$IMAGE_NAME\" (\"$LATEST_IMAGE\")? (yes/[no])"
 read -r CONFIRM_TAG_LATEST
 
 if [ "$CONFIRM_TAG_LATEST" = "yes" ]; then
@@ -56,7 +56,7 @@ if [ "$CONFIRM_TAG_LATEST" = "yes" ]; then
 fi
 
 echo ""
-echo "Publish build to Docker registry? (yes/[no])"
+echo "Publish to Docker registry? (yes/[no])"
 read -r CONFIRMATION
 
 if [ "$CONFIRMATION" = "yes" ]; then
@@ -68,6 +68,22 @@ if [ "$CONFIRMATION" = "yes" ]; then
         docker push "$LATEST_IMAGE"
     fi
 
+    docker push "$TAGGED_IMAGE"
+fi
+
+echo ""
+echo "Publish to Google Container registry? (yes/[no])"
+read -r CONFIRMATION
+
+if [ "$CONFIRMATION" = "yes" ]; then
+    GCR_HOST="gcr.io"
+
+    gcloud auth print-access-token | docker login \
+        --username oauth2accesstoken \
+        --password-stdin \
+        https://"$GCR_HOST"
+    
+    docker tag "$TAGGED_IMAGE" "$GCR_HOST/$TAGGED_IMAGE"
     docker push "$TAGGED_IMAGE"
 fi
 
