@@ -13,7 +13,7 @@ FROM base as build
 ARG BUILD_VERSION
 ARG GIT_HASH
 
-ADD . /boateng-api
+COPY . /boateng-api
 WORKDIR /boateng-api/src
 RUN CGO_ENABLED=0 GOOS=linux go build \
         -ldflags "-X main.version=${BUILD_VERSION} -X main.gitHash=${GIT_HASH}" \
