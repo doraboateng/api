@@ -15,7 +15,7 @@ func GetCorsOptions() cors.Options {
 			"http://localhost:*",
 			"http://0.0.0.0:*",
 			"http://127.0.0.1:*",
-			"http://172.21.0.0/24:*",
+			"http://172.0.0.0/8:*",
 		}
 	}
 
