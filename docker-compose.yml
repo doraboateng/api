@@ -21,7 +21,7 @@ services:
 
   # Dgraph Zero
   zero:
-    image: dgraph/dgraph:${DGRAPH_VERSION}
+    image: doraboateng/graph:latest
     command: >-
       dgraph zero
         --bindall
@@ -39,7 +39,7 @@ services:
 
   # Dgraph Alpha
   alpha:
-    image: dgraph/dgraph:${DGRAPH_VERSION}
+    image: doraboateng/graph:latest
     command: >-
       dgraph alpha
         --block_rate 10
@@ -62,7 +62,7 @@ services:
 
   # Dgraph Ratel
   ratel:
-    image: dgraph/dgraph:${DGRAPH_VERSION}
+    image: doraboateng/graph:latest
     command: dgraph-ratel -addr alpha:7080
     env_file: .env
     depends_on:
