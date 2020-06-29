@@ -14,8 +14,10 @@ func GetCorsOptions() cors.Options {
 		allowedOrigins = []string{
 			"http://localhost:*",
 			"http://0.0.0.0:*",
-			"http://127.0.0.1:*",
-			"http://172.0.0.0/8:*",
+			"http://10.0.0.0/8:*",
+			"http://127.0.0.0/8:*",
+			"http://172.16.0.0/12:*",
+			"http://192.168.0.0/16:*",
 		}
 	}
 
