@@ -14,9 +14,9 @@ services:
       - alpha
     env_file: .env
     environment:
-      - BOATENG_ENV: local
-      - GRAPH_ENDPOINT: http://alpha
-      - PORT: 8800
+      BOATENG_ENV: local
+      GRAPH_ENDPOINT: http://alpha
+      PORT: 8800
     networks:
       - shared_network
     ports:
