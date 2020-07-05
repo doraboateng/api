@@ -16,9 +16,9 @@ if [ ! -f ./.env ]; then
     read -r DOCKER_HUB_TOKEN
 
     {
-        echo "# API"
-        echo "BOATENG_ENV=local"
-        echo "BOATENG_API_PORT=8800"
+        echo ""
+        echo "# Graph"
+        echo "BOATENG_GRAPH_VERSION=v20.06.5"
 
         echo ""
         echo "# Dgraph"

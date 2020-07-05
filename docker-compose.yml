@@ -13,6 +13,12 @@ services:
       - zero
       - alpha
     env_file: .env
+    environment:
+      - BOATENG_ENV: local
+      - GRAPH_ENDPOINT: http://alpha
+      - PORT: 8800
+    networks:
+      - shared_network
     ports:
       - "8800:8800"
     volumes:
@@ -21,56 +27,49 @@ services:
 
   # Dgraph Zero
   zero:
-    image: doraboateng/graph:latest
+    image: doraboateng/graph:${BOATENG_GRAPH_VERSION}
     command: >-
       dgraph zero
         --bindall
-        --block_rate 10
-        --expose_trace
+        --enable_sentry=false
         --logtostderr
         --my=zero:5080
-        --profile_mode block
+        --telemetry=false
         -v=2
     env_file: .env
+    networks:
+      - shared_network
     ports:
-      - "8819:6080"
+      - "6080:6080"
     volumes:
       - dgraph_volume:/dgraph:delegated
 
   # Dgraph Alpha
   alpha:
-    image: doraboateng/graph:latest
+    image: doraboateng/graph:${BOATENG_GRAPH_VERSION}
     command: >-
       dgraph alpha
-        --block_rate 10
-        --expose_trace
+        --enable_sentry=false
         --logtostderr
         --lru_mb=1024
         --my=alpha:7080
-        --profile_mode block
+        --telemetry=false
         --trace 1.0
         -v=2
         --zero=zero:5080
     env_file: .env
+    networks:
+      - shared_network
     depends_on:
       - zero
     ports:
-      - 8817:8080
-      - 8818:7080
+      - 8080:8080
+      - 7080:7080
     volumes:
       - dgraph_volume:/dgraph:delegated
 
-  # Dgraph Ratel
-  ratel:
-    image: doraboateng/graph:latest
-    command: dgraph-ratel -addr alpha:7080
-    env_file: .env
-    depends_on:
-      - alpha
-    ports:
-      - 8811:8000
-    volumes:
-      - dgraph_volume:/dgraph:delegated
+networks:
+  shared_network:
 
 volumes:
   dgraph_volume:
