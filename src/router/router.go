@@ -35,8 +35,11 @@ func Create() *chi.Mux {
 	router.Get("/ping", GetPing)
 
 	// GraphQL.
-	router.Post("/graphql", GraphHandler)
-	router.Post("/refresh-schema", RefreshSchemaHandler)
+	// router.Post("/graphql", GraphHandler)
+	// router.Post("/refresh-schema", RefreshSchemaHandler)
+
+	// Search routes
+	router.Get("/search", SearchHandler)
 
 	return router
 }

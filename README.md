@@ -69,11 +69,9 @@ Port numbers published to your host machine.
 | Port | Service |
 | --- | --- |
 | 8800 | API |
-| 8810 | [GraphiQL (todo)](https://github.com/graphql/graphiql) |
-| 8811 | Dgraph Ratel |
-| 8817 | [Dgraph Alpha](https://dgraph.io/docs/deploy/#more-about-dgraph-alpha) (HTTP) |
-| 8818 | [Dgraph Alpha](https://dgraph.io/docs/deploy/#more-about-dgraph-alpha) (gRPC) |
-| 8819 | [Dgraph Zero](https://dgraph.io/docs/deploy/#more-about-dgraph-zero) |
+| 8080 | [Dgraph Alpha](https://dgraph.io/docs/deploy/#more-about-dgraph-alpha) (HTTP) |
+| 7080 | [Dgraph Alpha](https://dgraph.io/docs/deploy/#more-about-dgraph-alpha) (gRPC) |
+| 6080 | [Dgraph Zero](https://dgraph.io/docs/deploy/#more-about-dgraph-zero) |
 
 ## Viewing the log outputs from the services
 
@@ -122,30 +120,40 @@ docker cp boateng-api_alpha_1:/dgraph/doraboateng.2020-05-21.b406df.rdf.tar.gz t
 ## Loading a Dgraph backup using the live loader
 
 ```shell
-# Copy backup file into Dgraph Alpha container.
-docker cp /path/to/rdf boateng-api_alpha_1:/tmp/rdf.tar.gz
+# Copy backup file into tmp folder.
+rm -rf tmp/restore/$(date +'%Y-%m-%d') \
+    && mkdir -p tmp/restore/$(date +'%Y-%m-%d') \
+    && cp ./assets/sample.rdf.tar.gz tmp/restore/$(date +'%Y-%m-%d')/rdf.tar.gz
+
+# Download schema files into tmp folder.
+curl \
+    https://raw.githubusercontent.com/kwcay/boateng-graph/stable/src/schema/graph.gql \
+    --output tmp/restore/$(date +'%Y-%m-%d')/graph.gql \
+    && curl \
+    https://raw.githubusercontent.com/kwcay/boateng-graph/stable/src/schema/indices.dgraph \
+    --output tmp/restore/$(date +'%Y-%m-%d')/indices.dgraph
 
 # Extract backup file.
-./run shell alpha
-mkdir -p /tmp/restore/$(date +'%Y-%m-%d') \
-    && mv /tmp/rdf.tar.gz /tmp/restore/$(date +'%Y-%m-%d')/ \
-    && cd /tmp/restore/$(date +'%Y-%m-%d') \
+cd tmp/restore/$(date +'%Y-%m-%d') \
     && tar --extract --gzip --file rdf.tar.gz \
     && cp export/**/* .
 
-# Load backup file (skip schema).
-dgraph live \
-    --alpha 127.0.0.1:9080 \
-    --files g01.rdf.gz \
-    --zero zero:5080
+# Load schema files.
+curl localhost:8080/admin/schema --data-binary "@graph.gql" \
+    && curl localhost:8080/alter --data-binary "@indices.dgraph"
 
-# Load backup file + schema using compression
-dgraph live \
-    --alpha 127.0.0.1:9080 \
-    --files g01.rdf.gz \
-    --schema g01.schema.gz \
-    --use_compression \
-    --zero zero:5080
+# Load backup.
+docker run \
+    --interactive \
+    --rm \
+    --network boateng_api_shared_network \
+    --tty \
+    --volume $(pwd):/tmp \
+    doraboateng/graph \
+    dgraph live \
+        --alpha alpha:9080 \
+        --files /tmp/g01.rdf.gz \
+        --zero zero:5080
 ```
 
 ## Resetting Dgraph
