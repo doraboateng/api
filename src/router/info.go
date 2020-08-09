@@ -3,8 +3,8 @@ package router
 import (
 	"net/http"
 
+	"github.com/doraboateng/api/src/utils"
 	"github.com/go-chi/render"
-	"github.com/kwcay/boateng-api/src/utils"
 )
 
 // --

@@ -15,8 +15,8 @@
     - [Resetting Dgraph](#resetting-dgraph)
 - [Reporting Bugs](#reporting-bugs)
 - [Reporting Security Issues](#reporting-security-issues)
-- [Contributing](https://github.com/kwcay/boateng-graph-service/blob/stable/docs/contributing.md)
-- [Releasing](https://github.com/kwcay/boateng-api/blob/stable/docs/releasing.md)
+- [Contributing](docs/contributing.md)
+- [Releasing](docs/releasing.md)
 - [License](#license)
 
 </details>
@@ -181,10 +181,10 @@ docker-compose up --detach --force-recreate
 
 # Releasing
 
-See [releasing notes](https://github.com/kwcay/boateng-api/blob/stable/docs/releasing.md).
+See [releasing notes](docs/releasing.md).
 
 # License
 
-[GNU General Public License v3](https://github.com/kwcay/boateng-api/blob/stable/LICENSE)
+[GNU General Public License v3](LICENSE)
 
 Copyright © Kwahu & Cayes

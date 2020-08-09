@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/kwcay/boateng-api/src/router"
-	"github.com/kwcay/boateng-api/src/utils"
+	"github.com/doraboateng/api/src/router"
+	"github.com/doraboateng/api/src/utils"
 )
 
 // Build-time variables

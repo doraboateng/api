@@ -3,7 +3,7 @@ package resolvers
 import (
 	"context"
 
-	"github.com/kwcay/boateng-api/src/graph/models"
+	"github.com/doraboateng/api/src/graph/models"
 )
 
 type expressionResolver struct{ *Resolver }
