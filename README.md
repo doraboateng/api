@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.com/kwcay/boateng-api.svg?branch=stable)](https://travis-ci.com/kwcay/boateng-api)
-[![Maintainability](https://api.codeclimate.com/v1/badges/eaf38d5d227bbeb85571/maintainability)](https://codeclimate.com/github/kwcay/boateng-api/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/eaf38d5d227bbeb85571/test_coverage)](https://codeclimate.com/github/kwcay/boateng-api/test_coverage)
+[![Build Status](https://travis-ci.com/doraboateng/api.svg?branch=stable)](https://travis-ci.com/doraboateng/api)
+[![Maintainability](https://api.codeclimate.com/v1/badges/86cf05f498bf5fbad599/maintainability)](https://codeclimate.com/github/doraboateng/api/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/86cf05f498bf5fbad599/test_coverage)](https://codeclimate.com/github/doraboateng/api/test_coverage)
 
 <details>
     <summary>Table of Contents</summary>

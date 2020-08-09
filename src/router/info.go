@@ -25,8 +25,8 @@ type StatusResponse struct {
 // Router methods
 // ---
 
-// GetHealth returns a health status.
-func GetHealth(writer http.ResponseWriter, request *http.Request) {
+// HealthHandler returns a health status for various back-end services.
+func HealthHandler(writer http.ResponseWriter, request *http.Request) {
 	status := &Status{
 		API: "up",
 	}
@@ -37,8 +37,8 @@ func GetHealth(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// GetPing ...
-func GetPing(writer http.ResponseWriter, request *http.Request) {
+// PingHandler ...
+func PingHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Write([]byte("pong"))
 }
 

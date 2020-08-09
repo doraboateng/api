@@ -27,16 +27,12 @@ func Create() *chi.Mux {
 	// Set a timeout value on the request context (ctx), that will signal
 	// through ctx.Done() that the request has timed out and further
 	// processing should be stopped.
-	router.Use(middleware.Timeout(60 * time.Second))
+	router.Use(middleware.Timeout(3 * time.Second))
 
 	// Informational routes
-	router.Get("/", GetHealth)
-	router.Get("/health", GetHealth)
-	router.Get("/ping", GetPing)
-
-	// GraphQL.
-	// router.Post("/graphql", GraphHandler)
-	// router.Post("/refresh-schema", RefreshSchemaHandler)
+	router.Get("/", HealthHandler)
+	router.Get("/health", HealthHandler)
+	router.Get("/ping", PingHandler)
 
 	// Search routes
 	router.Get("/search", SearchHandler)
