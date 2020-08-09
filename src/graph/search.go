@@ -1,4 +1,4 @@
-package resolvers
+package graph
 
 import (
 	"context"
@@ -21,17 +21,18 @@ func mergeResults(
 	return append(results, extraResults...)
 }
 
-func (r *queryResolver) Search(
-	ctx context.Context,
-	query string,
-) ([]*models.SearchResult, error) {
+// Search ...
+func Search(ctx context.Context, query string) []*models.SearchResult {
+	client, close := GetClient()
+	defer close()
+
 	var results []*models.SearchResult
 
-	languages, err := models.GetLanguageSearchResults(ctx, r.Dgraph, query)
+	languages, err := models.GetLanguageSearchResults(ctx, client, query)
 	results = mergeResults(results, languages, err)
 
-	expressions, err := models.GetExpressionSearchResults(ctx, r.Dgraph, "eng", query)
+	expressions, err := models.GetExpressionSearchResults(ctx, client, "eng", query)
 	results = mergeResults(results, expressions, err)
 
-	return results, nil
+	return results
 }

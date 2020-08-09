@@ -11,12 +11,17 @@ import (
 	"github.com/dgraph-io/dgo/v200"
 	"github.com/dgraph-io/dgo/v200/protos/api"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/encoding/gzip"
 )
 
 // GetClient connects to all Dgraph Alpha instances.
 func GetClient() (*dgo.Dgraph, context.CancelFunc) {
 	// Open gRPC connections to Dgraph Alpha nodes.
-	conn, err := grpc.Dial("alpha:9080", grpc.WithInsecure())
+	conn, err := grpc.Dial(
+		"alpha:9080",
+		grpc.WithInsecure(),
+		grpc.WithDefaultCallOptions(grpc.UseCompressor(gzip.Name)),
+	)
 
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")

@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/kwcay/boateng-api/src/graph/models"
+	"github.com/doraboateng/api/src/graph/models"
 )
 
 type languageResolver struct{ *Resolver }

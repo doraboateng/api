@@ -35,7 +35,6 @@ services:
         --logtostderr
         --my=zero:5080
         --telemetry=false
-        -v=2
     env_file: .env
     networks:
       - shared_network
@@ -55,7 +54,6 @@ services:
         --my=alpha:7080
         --telemetry=false
         --trace 1.0
-        -v=2
         --zero=zero:5080
     env_file: .env
     networks:

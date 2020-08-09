@@ -4,7 +4,7 @@ package resolvers
 
 import (
 	"github.com/dgraph-io/dgo/v200"
-	"github.com/kwcay/boateng-api/src/graph/generated"
+	"github.com/doraboateng/api/src/graph/generated"
 )
 
 // Resolver ...
