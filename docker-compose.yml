@@ -15,7 +15,8 @@ services:
     env_file: .env
     environment:
       BOATENG_ENV: local
-      GRAPH_ENDPOINT: http://alpha
+      GRAPH_ENDPOINT: alpha:9080
+      # GRAPH_ENDPOINT: graph.doraboateng.com:9080
       PORT: 8800
     networks:
       - shared_network

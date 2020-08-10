@@ -18,7 +18,7 @@ import (
 func GetClient() (*dgo.Dgraph, context.CancelFunc) {
 	// Open gRPC connections to Dgraph Alpha nodes.
 	conn, err := grpc.Dial(
-		"alpha:9080",
+		os.Getenv("GRAPH_ENDPOINT"),
 		grpc.WithInsecure(),
 		grpc.WithDefaultCallOptions(grpc.UseCompressor(gzip.Name)),
 	)
