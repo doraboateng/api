@@ -156,7 +156,9 @@ func GetExpressionSearchResults(
 					practical,
 					expressions[i].Languages[0].Names[0].Value,
 				),
-				ResourceID: expressions[i].UUID,
+				Description: "",
+				// ResourceID: expressions[i].UUID,
+				ResourceID: expressions[i].Titles[0].Value,
 			})
 		} else {
 			log.Println("found expression without practical translation")

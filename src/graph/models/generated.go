@@ -40,9 +40,10 @@ type Script struct {
 }
 
 type SearchResult struct {
-	Type       string `json:"type"`
-	Title      string `json:"title"`
-	ResourceID string `json:"resourceId"`
+	Type        string `json:"type"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	ResourceID  string `json:"resourceId"`
 }
 
 type Story struct {

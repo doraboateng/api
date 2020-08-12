@@ -28,6 +28,10 @@ func Search(ctx context.Context, query string) []*models.SearchResult {
 
 	var results []*models.SearchResult
 
+	if len(query) < 1 {
+		return results
+	}
+
 	languages, err := models.GetLanguageSearchResults(ctx, client, query)
 	results = mergeResults(results, languages, err)
 

@@ -16,6 +16,8 @@ type SearchResult struct {
 	Title       string `json:"title"`
 	Link        string `json:"link"`
 	Description string `json:"description"`
+	Type        string `json:"type"`
+	ResourceID  string `json:"resourceId"`
 }
 
 // SearchResults describes the JSON shape of result set.
@@ -27,7 +29,7 @@ type SearchResults struct {
 func getResourceURL(resource models.SearchResult) string {
 	switch resource.Type {
 	case "expression":
-		return "https://doraboateng.com"
+		return fmt.Sprintf("https://doraboateng.com/gem/%s", resource.Title)
 
 	case "language":
 		return fmt.Sprintf("https://doraboateng.com/%s", resource.ResourceID)
@@ -54,6 +56,8 @@ func SearchHandler(writer http.ResponseWriter, request *http.Request) {
 			Title:       results[i].Title,
 			Link:        getResourceURL(*results[i]),
 			Description: "",
+			Type:        results[i].Type,
+			ResourceID:  results[i].ResourceID,
 		})
 	}
 
