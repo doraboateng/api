@@ -151,7 +151,7 @@ func GetExpressionSearchResults(
 			results = append(results, &SearchResult{
 				Type: "expression",
 				Title: fmt.Sprintf(
-					"%s (\"%s\" in %s)",
+					"%s means \"%s\" in %s",
 					expressions[i].Titles[0].Value,
 					practical,
 					expressions[i].Languages[0].Names[0].Value,
