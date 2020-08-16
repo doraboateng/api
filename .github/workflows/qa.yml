@@ -4,8 +4,7 @@ on:
   pull_request:
 
 jobs:
-  golangci:
-    name: Lint
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -13,3 +12,8 @@ jobs:
         with:
           version: v1.30
           only-new-issues: true
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: go test -coverprofile c.out ./...
