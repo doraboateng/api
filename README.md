@@ -1,6 +1,5 @@
-[![Build Status](https://travis-ci.com/doraboateng/api.svg?branch=stable)](https://travis-ci.com/doraboateng/api)
-[![Maintainability](https://api.codeclimate.com/v1/badges/86cf05f498bf5fbad599/maintainability)](https://codeclimate.com/github/doraboateng/api/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/86cf05f498bf5fbad599/test_coverage)](https://codeclimate.com/github/doraboateng/api/test_coverage)
+[![Maintainability](https://api.codeclimate.com/v1/badges/bf99a01644ab2cdef826/maintainability)](https://codeclimate.com/github/doraboateng/api/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/bf99a01644ab2cdef826/test_coverage)](https://codeclimate.com/github/doraboateng/api/test_coverage)
 
 <details>
     <summary>Table of Contents</summary>
@@ -16,7 +15,6 @@
 - [Reporting Bugs](#reporting-bugs)
 - [Reporting Security Issues](#reporting-security-issues)
 - [Contributing](docs/contributing.md)
-- [Releasing](docs/releasing.md)
 - [License](#license)
 
 </details>
@@ -178,10 +176,6 @@ docker-compose up --detach --force-recreate
 # Reporting Security Issues
 
 >TODO
-
-# Releasing
-
-See [releasing notes](docs/releasing.md).
 
 # License
 
