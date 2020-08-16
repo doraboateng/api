@@ -16,7 +16,6 @@
 - [Reporting Bugs](#reporting-bugs)
 - [Reporting Security Issues](#reporting-security-issues)
 - [Contributing](docs/contributing.md)
-- [Releasing](docs/releasing.md)
 - [License](#license)
 
 </details>
@@ -178,10 +177,6 @@ docker-compose up --detach --force-recreate
 # Reporting Security Issues
 
 >TODO
-
-# Releasing
-
-See [releasing notes](docs/releasing.md).
 
 # License
 
