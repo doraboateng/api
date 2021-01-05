@@ -1,6 +1,7 @@
 .git/
 .github/
 .vscode/
+builds/
 docs/
 scripts/
 tmp/
