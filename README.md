@@ -112,46 +112,14 @@ ls doraboateng.*.rdf.tar.gz
 exit
 
 # Copy RDF backup.
-docker cp boateng-api_alpha_1:/dgraph/doraboateng.2020-05-21.b406df.rdf.tar.gz tmp/
+docker cp boateng-api_alpha_1:/dgraph/doraboateng.<DATE>.<HASH>.rdf.tar.gz tmp/
 ```
 
-## Loading a Dgraph backup using the live loader
+## Loading sample data using the live loader
 
 ```shell
-# Copy backup file into tmp folder.
-rm -rf tmp/restore/$(date +'%Y-%m-%d') \
-    && mkdir -p tmp/restore/$(date +'%Y-%m-%d') \
-    && cp ./assets/sample.rdf.tar.gz tmp/restore/$(date +'%Y-%m-%d')/rdf.tar.gz
-
-# Download schema files into tmp folder.
-curl \
-    https://raw.githubusercontent.com/kwcay/boateng-graph/stable/src/schema/graph.gql \
-    --output tmp/restore/$(date +'%Y-%m-%d')/graph.gql \
-    && curl \
-    https://raw.githubusercontent.com/kwcay/boateng-graph/stable/src/schema/indices.dgraph \
-    --output tmp/restore/$(date +'%Y-%m-%d')/indices.dgraph
-
-# Extract backup file.
-cd tmp/restore/$(date +'%Y-%m-%d') \
-    && tar --extract --gzip --file rdf.tar.gz \
-    && cp export/**/* .
-
-# Load schema files.
-curl localhost:8080/admin/schema --data-binary "@graph.gql" \
-    && curl localhost:8080/alter --data-binary "@indices.dgraph"
-
-# Load backup.
-docker run \
-    --interactive \
-    --rm \
-    --network boateng_api_shared_network \
-    --tty \
-    --volume $(pwd):/tmp \
-    doraboateng/graph \
-    dgraph live \
-        --alpha alpha:9080 \
-        --files /tmp/g01.rdf.gz \
-        --zero zero:5080
+./run clear-data
+./run load-sample-data
 ```
 
 ## Resetting Dgraph

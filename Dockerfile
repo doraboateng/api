@@ -1,4 +1,4 @@
-ARG GO_VERSION=1.14.2
+ARG GO_VERSION=1.15.6
 
 # Base image for building and developmemnt.
 FROM golang:${GO_VERSION}-buster AS base
@@ -17,8 +17,8 @@ COPY . /boateng-api
 WORKDIR /boateng-api/src
 RUN CGO_ENABLED=0 GOOS=linux go build \
         -ldflags "-X main.version=${BUILD_VERSION} -X main.gitHash=${GIT_HASH}" \
-        -o /tmp/boateng-api-bin
-RUN chmod +x /tmp/boateng-api-bin
+        -o /builds/boateng-api-bin
+RUN chmod +x /builds/boateng-api-bin
 
 # Production stage.
 # TODO: should we be using Alpine (alpine:3.9.6) or Distroless
@@ -28,7 +28,7 @@ FROM scratch AS prod
 ARG BUILD_VERSION
 ARG GIT_HASH
 
-COPY --from=build /tmp/boateng-api-bin /usr/local/bin/boateng-api
+COPY --from=build /builds/boateng-api-bin /usr/local/bin/boateng-api
 
 ENV BOATENG_ENV=production
 ENV GRAPH_SCHEMA_PATH=/opt/graph.gql

@@ -15,29 +15,35 @@ import (
 )
 
 // GetClient connects to all Dgraph Alpha instances.
-func GetClient() (*dgo.Dgraph, context.CancelFunc) {
-	// Open gRPC connections to Dgraph Alpha nodes.
-	conn, err := grpc.Dial(
-		os.Getenv("GRAPH_ENDPOINT"),
-		grpc.WithInsecure(),
-		grpc.WithDefaultCallOptions(grpc.UseCompressor(gzip.Name)),
-	)
+func GetClient() *dgo.Dgraph {
+	var conn *grpc.ClientConn
+	var err error
+	graphEndpoint := os.Getenv("GRAPH_ENDPOINT")
+
+	if slashKey := os.Getenv("SLASH_GRAPHQL_AUTH_TOKEN"); slashKey != "" {
+		log.Println("Connecting to Slash GraphQL backend")
+		conn, err = dgo.DialSlashEndpoint(graphEndpoint, slashKey)
+	} else {
+		conn, err = grpc.Dial(
+			graphEndpoint,
+			grpc.WithInsecure(),
+			grpc.WithDefaultCallOptions(grpc.UseCompressor(gzip.Name)),
+		)
+	}
 
 	if err != nil {
 		log.Fatal("While trying to dial gRPC")
 	}
 
+	defer conn.Close()
 	alpha1 := api.NewDgraphClient(conn)
 	client := dgo.NewDgraphClient(alpha1)
 
-	return client, func() {
-		if err := conn.Close(); err != nil {
-			log.Printf("Error while closing Dgraph connection: %v", err)
-		}
-	}
+	return client
 }
 
 // LoadSchema updates the Dgraph schema and indices.
+// TODO: deprecated.
 func LoadSchema(client *dgo.Dgraph) error {
 	log.Println("Refreshing Graph schema...")
 
@@ -74,13 +80,14 @@ func LoadSchema(client *dgo.Dgraph) error {
 }
 
 // RefreshSchema ...
+// TODO: deprecated.
 func RefreshSchema() {
-	client, close := GetClient()
-	defer close()
+	client := GetClient()
 
 	LoadSchema(client)
 }
 
+// TODO: deprecated.
 func readFile(envKey string, filename string) ([]byte, error) {
 	filepath := "./src/graph/schema/" + filename
 

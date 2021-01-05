@@ -23,9 +23,7 @@ func mergeResults(
 
 // Search ...
 func Search(ctx context.Context, query string) []*models.SearchResult {
-	client, close := GetClient()
-	defer close()
-
+	client := GetClient()
 	var results []*models.SearchResult
 
 	if len(query) < 1 {
