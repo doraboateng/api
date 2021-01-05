@@ -1,4 +1,4 @@
-ARG GO_VERSION=1.14.2
+ARG GO_VERSION=1.15.6
 
 # Base image for building and developmemnt.
 FROM golang:${GO_VERSION}-buster AS base

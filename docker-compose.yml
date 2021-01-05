@@ -28,7 +28,8 @@ services:
 
   # Dgraph Zero
   zero:
-    image: doraboateng/graph:${BOATENG_GRAPH_VERSION}
+    # image: doraboateng/graph:${BOATENG_GRAPH_VERSION}
+    image: dgraph/dgraph:${DGRAPH_VERSION}
     command: >-
       dgraph zero
         --bindall
@@ -46,7 +47,8 @@ services:
 
   # Dgraph Alpha
   alpha:
-    image: doraboateng/graph:${BOATENG_GRAPH_VERSION}
+    # image: doraboateng/graph:${BOATENG_GRAPH_VERSION}
+    image: dgraph/dgraph:${DGRAPH_VERSION}
     command: >-
       dgraph alpha
         --enable_sentry=false
