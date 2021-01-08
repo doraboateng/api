@@ -49,4 +49,8 @@ docker run \
         --zero zero:5080
 
 echo ""
+echo "Cleaning temporary files..."
+rm -rf "$SAMPLE_TMP_DIR"
+
+echo ""
 echo "Done."
