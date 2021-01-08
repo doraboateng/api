@@ -118,7 +118,7 @@ docker cp boateng-api_alpha_1:/dgraph/doraboateng.<DATE>.<HASH>.rdf.tar.gz tmp/
 ## Loading sample data using the live loader
 
 ```shell
-./run clear-data
+./run clear-graph
 ./run load-sample-data
 ```
 
