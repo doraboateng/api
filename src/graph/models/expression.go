@@ -74,9 +74,18 @@ func queryExpressionsInLanguage(
 				<Expression.uuid>
 				<Expression.type>
 				<Expression.partOfSpeech>
-				<Expression.literalTranslation>@LANG_CODE:.
-				<Expression.practicalTranslation>@LANG_CODE:.
-				<Expression.meaning@LANG_CODE:.>
+			    <Expression.literalTranslations> @filter(
+				  		anyoftext(Transliteration.value, $query)) {
+				    <Transliteration.value>
+			    }
+			    <Expression.practicalTranslations> @filter(
+						anyoftext(Transliteration.value, $query)) {
+				    <Transliteration.value>
+			    }
+			    <Expression.meanings> @filter(
+						anyoftext(Transliteration.value, $query)) {
+				    <Transliteration.value>
+			    }
 
 				<Expression.titles> {
 					<Transliteration.value>
@@ -156,7 +165,6 @@ func GetExpressionSearchResults(
 					practical,
 					expressions[i].Languages[0].Names[0].Value,
 				),
-				Description: "",
 				// ResourceID: expressions[i].UUID,
 				ResourceID: expressions[i].Titles[0].Value,
 			})

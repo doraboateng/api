@@ -5,12 +5,6 @@ enum ExpressionType {
   Word
 }
 
-enum StoryType {
-  Poem
-  Song
-  Story
-}
-
 enum NounType {
   Name
   Place
@@ -48,31 +42,37 @@ enum ReferenceType {
   Other
 }
 
+enum StoryType {
+  Poem
+  Song
+  Story
+}
+
 type Alphabet {
   code: String!
-  name: String!
+  names: [Transliteration!]!
   script: Script
   characters: String
-  languages: [Language]
+  # languages: [Language]
   references: [Reference]
 }
 
 type Culture {
   endonym: String! # Name as defined by the people of the culture.
-  exonym: [String!]! # Names used by foreigners.
+  exonyms: [Transliteration!]! # Names used by foreigners.
 }
 
 type Expression {
-  uuid: String! # RFC 4122 UUID as a 32-character hexadecimal string.
+  uuid: String!  # RFC 4122 UUID as a 32-character hexadecimal string.
   type: ExpressionType!
   titles: [Transliteration!]!
   languages: [Language!]!
   partOfSpeech: PartOfSpeech
   nounType: NounType
   lexeme: Expression # When the lexeme references itself, we have a lemma.
-  literalTranslation: String
-  practicalTranslation: String
-  meaning: String
+  literalTranslations: [Transliteration!]!
+  practicalTranslations: [Transliteration!]!
+  meanings: [Transliteration!]!
   tags: [Tag]
   relatedExpressions: [Expression] # Synonyms, antonyms, compound words maybe.
   references: [Reference]
@@ -102,7 +102,7 @@ type Script {
 
 type Story {
   type: StoryType!
-  lines: [StoryLine]!
+  lines: [StoryLine]! # @hasInverse(field: story)
   language: Language
   script: Script
 }
@@ -117,8 +117,8 @@ type Tag {
 }
 
 type Transliteration {
-  hash: String
-  value: String!
+  hash: String!
+  value: String! # @search(by: [fulltext])
   langCode: String
   scriptCode: String
 }

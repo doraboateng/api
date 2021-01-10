@@ -12,6 +12,7 @@
     - [Creating a Dgraph backup](#creating-a-dgraph-backup)
     - [Loading a Dgraph backup using the live loader](#loading-a-dgraph-backup-using-the-live-loader)
     - [Resetting Dgraph](#resetting-dgraph)
+- [Updating the GraphQL schema](#updating-the-graphql-schema)
 - [Reporting Bugs](#reporting-bugs)
 - [Reporting Security Issues](#reporting-security-issues)
 - [Contributing](docs/contributing.md)
@@ -67,7 +68,7 @@ Port numbers published to your host machine.
 | Port | Service |
 | --- | --- |
 | 8800 | API |
-| 8080 | [Dgraph Alpha](https://dgraph.io/docs/deploy/#more-about-dgraph-alpha) (HTTP) |
+| 8080 | [Dgraph Alpha/GraphQL](https://dgraph.io/docs/deploy/#more-about-dgraph-alpha) (HTTP) |
 | 7080 | [Dgraph Alpha](https://dgraph.io/docs/deploy/#more-about-dgraph-alpha) (gRPC) |
 | 6080 | [Dgraph Zero](https://dgraph.io/docs/deploy/#more-about-dgraph-zero) |
 
@@ -135,6 +136,35 @@ docker volume rm boateng-api_dgraph_volume
 
 # Rebuild containers.
 docker-compose up --detach --force-recreate
+```
+
+# Updating the GraphQL schema
+
+Create a new branch from the latest stable branch.
+
+Then, retrieve the latest schema from [doraboateng/graph](https://github.com/doraboateng/graph):
+
+```shell
+# Downloads the latest schema from doraboateng/graph and removes the "@id"
+# directives.
+curl \
+    --output src/graph/schema/graph.gql \
+    https://raw.githubusercontent.com/doraboateng/graph/stable/src/schema/graph.gql \
+    && sed -i 's/\(@[a-zA-Z]*\)/# \1/g' src/graph/schema/graph.gql
+```
+
+Finally, use [gqlgen](https://gqlgen.com/getting-started/#implement-the-resolvers) to generate the Go bindings:
+
+```shell
+# If the API is not already running, start it using Docker Compose:
+docker-compose up --detach
+
+# Launch a shell inside the API container:
+./run shell api
+
+# Generate the Go bindings:
+go run github.com/99designs/gqlgen generate
+exit
 ```
 
 # Reporting Bugs
