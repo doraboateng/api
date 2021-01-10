@@ -9,12 +9,16 @@ import (
 )
 
 type Alphabet struct {
-	Code       string       `json:"code"`
-	Name       string       `json:"name"`
-	Script     *Script      `json:"script"`
-	Characters *string      `json:"characters"`
-	Languages  []*Language  `json:"languages"`
-	References []*Reference `json:"references"`
+	Code       string             `json:"code"`
+	Names      []*Transliteration `json:"names"`
+	Script     *Script            `json:"script"`
+	Characters *string            `json:"characters"`
+	References []*Reference       `json:"references"`
+}
+
+type Culture struct {
+	Endonym string             `json:"endonym"`
+	Exonyms []*Transliteration `json:"exonyms"`
 }
 
 type Language struct {
@@ -40,10 +44,9 @@ type Script struct {
 }
 
 type SearchResult struct {
-	Type        string `json:"type"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	ResourceID  string `json:"resourceId"`
+	Type       string `json:"type"`
+	Title      string `json:"title"`
+	ResourceID string `json:"resourceId"`
 }
 
 type Story struct {
@@ -63,7 +66,7 @@ type Tag struct {
 }
 
 type Transliteration struct {
-	Hash       *string `json:"hash"`
+	Hash       string  `json:"hash"`
 	Value      string  `json:"value"`
 	LangCode   *string `json:"langCode"`
 	ScriptCode *string `json:"scriptCode"`

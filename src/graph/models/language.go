@@ -98,10 +98,9 @@ func GetLanguageSearchResults(
 
 	for i := 0; i < len(languages); i++ {
 		results = append(results, &SearchResult{
-			Type:        "language",
-			Title:       languages[i].Names[0].Value,
-			Description: "",
-			ResourceID:  languages[i].Code,
+			Type:       "language",
+			Title:      languages[i].Names[0].Value,
+			ResourceID: languages[i].Code,
 		})
 	}
 
